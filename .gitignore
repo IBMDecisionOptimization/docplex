@@ -1,0 +1,14 @@
+*.pyc
+.idea
+.ipynb_checkpoints
+__pycache__
+
+
+# ignore pydev projects
+.project
+.pydevproject
+
+# obviously no .bak
+*.bak
+*.log
+.DS_Store
