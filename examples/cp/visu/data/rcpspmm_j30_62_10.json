@@ -1,0 +1,277 @@
+{
+   "capacityRenewable": [27, 27],
+   "capacityNonRenewable": [185, 193],
+   "tasks":
+   [
+      {
+         "id": 0, "successors": [3, 18],
+         "modes":
+         [
+            { "duration": 2, "demandRenewable": [6, 4], "demandNonRenewable": [5, 3] },
+            { "duration": 5, "demandRenewable": [4, 3], "demandNonRenewable": [4, 2] },
+            { "duration": 8, "demandRenewable": [3, 3], "demandNonRenewable": [4, 2] }
+         ]
+      }, 
+      {
+         "id": 1, "successors": [7, 24],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [8, 2], "demandNonRenewable": [9, 7] },
+            { "duration": 1, "demandRenewable": [9, 2], "demandNonRenewable": [8, 8] },
+            { "duration": 8, "demandRenewable": [8, 2], "demandNonRenewable": [7, 7] }
+         ]
+      }, 
+      {
+         "id": 2, "successors": [4, 5, 8],
+         "modes":
+         [
+            { "duration": 3, "demandRenewable": [9, 4], "demandNonRenewable": [5, 6] },
+            { "duration": 3, "demandRenewable": [7, 4], "demandNonRenewable": [5, 10] },
+            { "duration": 8, "demandRenewable": [5, 2], "demandNonRenewable": [2, 3] }
+         ]
+      }, 
+      {
+         "id": 3, "successors": [7, 9, 20],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [6, 4], "demandNonRenewable": [6, 7] },
+            { "duration": 5, "demandRenewable": [5, 3], "demandNonRenewable": [5, 6] },
+            { "duration": 9, "demandRenewable": [2, 3], "demandNonRenewable": [2, 6] }
+         ]
+      }, 
+      {
+         "id": 4, "successors": [6],
+         "modes":
+         [
+            { "duration": 3, "demandRenewable": [8, 4], "demandNonRenewable": [10, 6] },
+            { "duration": 3, "demandRenewable": [9, 3], "demandNonRenewable": [10, 6] },
+            { "duration": 6, "demandRenewable": [5, 2], "demandNonRenewable": [10, 6] }
+         ]
+      }, 
+      {
+         "id": 5, "successors": [10, 12, 17],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [7, 8], "demandNonRenewable": [10, 7] },
+            { "duration": 8, "demandRenewable": [6, 6], "demandNonRenewable": [9, 7] },
+            { "duration": 9, "demandRenewable": [5, 5], "demandNonRenewable": [9, 4] }
+         ]
+      }, 
+      {
+         "id": 6, "successors": [28],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [4, 10], "demandNonRenewable": [6, 8] },
+            { "duration": 3, "demandRenewable": [3, 4], "demandNonRenewable": [4, 6] },
+            { "duration": 3, "demandRenewable": [4, 6], "demandNonRenewable": [4, 3] }
+         ]
+      }, 
+      {
+         "id": 7, "successors": [16, 17, 26],
+         "modes":
+         [
+            { "duration": 5, "demandRenewable": [5, 7], "demandNonRenewable": [9, 9] },
+            { "duration": 7, "demandRenewable": [3, 5], "demandNonRenewable": [6, 8] },
+            { "duration": 9, "demandRenewable": [1, 4], "demandNonRenewable": [3, 8] }
+         ]
+      }, 
+      {
+         "id": 8, "successors": [9, 10, 15],
+         "modes":
+         [
+            { "duration": 2, "demandRenewable": [7, 7], "demandNonRenewable": [6, 7] },
+            { "duration": 3, "demandRenewable": [6, 6], "demandNonRenewable": [5, 7] },
+            { "duration": 5, "demandRenewable": [4, 5], "demandNonRenewable": [3, 6] }
+         ]
+      }, 
+      {
+         "id": 9, "successors": [11, 19, 23],
+         "modes":
+         [
+            { "duration": 5, "demandRenewable": [10, 6], "demandNonRenewable": [4, 6] },
+            { "duration": 9, "demandRenewable": [6, 3], "demandNonRenewable": [4, 5] },
+            { "duration": 9, "demandRenewable": [6, 1], "demandNonRenewable": [3, 6] }
+         ]
+      }, 
+      {
+         "id": 10, "successors": [18, 22],
+         "modes":
+         [
+            { "duration": 2, "demandRenewable": [8, 10], "demandNonRenewable": [6, 3] },
+            { "duration": 5, "demandRenewable": [6, 5], "demandNonRenewable": [3, 3] },
+            { "duration": 6, "demandRenewable": [5, 5], "demandNonRenewable": [1, 2] }
+         ]
+      }, 
+      {
+         "id": 11, "successors": [13],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [6, 9], "demandNonRenewable": [9, 2] },
+            { "duration": 5, "demandRenewable": [6, 4], "demandNonRenewable": [8, 1] },
+            { "duration": 9, "demandRenewable": [6, 3], "demandNonRenewable": [8, 1] }
+         ]
+      }, 
+      {
+         "id": 12, "successors": [14, 20, 21],
+         "modes":
+         [
+            { "duration": 4, "demandRenewable": [8, 7], "demandNonRenewable": [9, 10] },
+            { "duration": 4, "demandRenewable": [7, 8], "demandNonRenewable": [9, 10] },
+            { "duration": 10, "demandRenewable": [6, 6], "demandNonRenewable": [7, 9] }
+         ]
+      }, 
+      {
+         "id": 13, "successors": [16, 17],
+         "modes":
+         [
+            { "duration": 3, "demandRenewable": [9, 9], "demandNonRenewable": [4, 5] },
+            { "duration": 7, "demandRenewable": [8, 6], "demandNonRenewable": [4, 4] },
+            { "duration": 8, "demandRenewable": [8, 5], "demandNonRenewable": [2, 2] }
+         ]
+      }, 
+      {
+         "id": 14, "successors": [22],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [8, 8], "demandNonRenewable": [5, 9] },
+            { "duration": 5, "demandRenewable": [6, 7], "demandNonRenewable": [3, 7] },
+            { "duration": 7, "demandRenewable": [6, 6], "demandNonRenewable": [3, 4] }
+         ]
+      }, 
+      {
+         "id": 15, "successors": [29],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [4, 9], "demandNonRenewable": [5, 3] },
+            { "duration": 2, "demandRenewable": [3, 6], "demandNonRenewable": [5, 3] },
+            { "duration": 9, "demandRenewable": [3, 5], "demandNonRenewable": [4, 2] }
+         ]
+      }, 
+      {
+         "id": 16, "successors": [27, 29],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [5, 6], "demandNonRenewable": [3, 4] },
+            { "duration": 6, "demandRenewable": [4, 5], "demandNonRenewable": [2, 4] },
+            { "duration": 6, "demandRenewable": [2, 4], "demandNonRenewable": [3, 3] }
+         ]
+      }, 
+      {
+         "id": 17, "successors": [27],
+         "modes":
+         [
+            { "duration": 2, "demandRenewable": [9, 5], "demandNonRenewable": [5, 3] },
+            { "duration": 3, "demandRenewable": [8, 5], "demandNonRenewable": [2, 2] },
+            { "duration": 3, "demandRenewable": [8, 4], "demandNonRenewable": [4, 1] }
+         ]
+      }, 
+      {
+         "id": 18, "successors": [20, 21],
+         "modes":
+         [
+            { "duration": 4, "demandRenewable": [8, 7], "demandNonRenewable": [7, 8] },
+            { "duration": 10, "demandRenewable": [8, 5], "demandNonRenewable": [6, 7] },
+            { "duration": 10, "demandRenewable": [8, 7], "demandNonRenewable": [5, 8] }
+         ]
+      }, 
+      {
+         "id": 19, "successors": [21, 24],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [5, 5], "demandNonRenewable": [7, 10] },
+            { "duration": 4, "demandRenewable": [2, 5], "demandNonRenewable": [6, 10] },
+            { "duration": 9, "demandRenewable": [1, 4], "demandNonRenewable": [5, 10] }
+         ]
+      }, 
+      {
+         "id": 20, "successors": [23, 26, 28],
+         "modes":
+         [
+            { "duration": 2, "demandRenewable": [9, 6], "demandNonRenewable": [5, 10] },
+            { "duration": 3, "demandRenewable": [9, 3], "demandNonRenewable": [4, 9] },
+            { "duration": 5, "demandRenewable": [7, 2], "demandNonRenewable": [3, 8] }
+         ]
+      }, 
+      {
+         "id": 21, "successors": [25],
+         "modes":
+         [
+            { "duration": 4, "demandRenewable": [8, 4], "demandNonRenewable": [4, 6] },
+            { "duration": 8, "demandRenewable": [6, 4], "demandNonRenewable": [3, 4] },
+            { "duration": 10, "demandRenewable": [4, 4], "demandNonRenewable": [2, 3] }
+         ]
+      }, 
+      {
+         "id": 22, "successors": [23, 24, 25],
+         "modes":
+         [
+            { "duration": 3, "demandRenewable": [4, 9], "demandNonRenewable": [9, 6] },
+            { "duration": 4, "demandRenewable": [4, 7], "demandNonRenewable": [9, 5] },
+            { "duration": 10, "demandRenewable": [2, 6], "demandNonRenewable": [9, 4] }
+         ]
+      }, 
+      {
+         "id": 23, "successors": [27],
+         "modes":
+         [
+            { "duration": 3, "demandRenewable": [5, 8], "demandNonRenewable": [6, 5] },
+            { "duration": 7, "demandRenewable": [5, 8], "demandNonRenewable": [6, 4] },
+            { "duration": 10, "demandRenewable": [5, 8], "demandNonRenewable": [5, 4] }
+         ]
+      }, 
+      {
+         "id": 24, "successors": [28],
+         "modes":
+         [
+            { "duration": 4, "demandRenewable": [4, 9], "demandNonRenewable": [5, 9] },
+            { "duration": 9, "demandRenewable": [4, 9], "demandNonRenewable": [3, 7] },
+            { "duration": 10, "demandRenewable": [4, 8], "demandNonRenewable": [3, 2] }
+         ]
+      }, 
+      {
+         "id": 25, "successors": [26],
+         "modes":
+         [
+            { "duration": 6, "demandRenewable": [10, 6], "demandNonRenewable": [3, 8] },
+            { "duration": 8, "demandRenewable": [10, 6], "demandNonRenewable": [3, 6] },
+            { "duration": 10, "demandRenewable": [9, 4], "demandNonRenewable": [3, 5] }
+         ]
+      }, 
+      {
+         "id": 26, "successors": [29],
+         "modes":
+         [
+            { "duration": 2, "demandRenewable": [6, 10], "demandNonRenewable": [5, 6] },
+            { "duration": 5, "demandRenewable": [6, 10], "demandNonRenewable": [5, 5] },
+            { "duration": 9, "demandRenewable": [4, 10], "demandNonRenewable": [2, 4] }
+         ]
+      }, 
+      {
+         "id": 27, "successors": [],
+         "modes":
+         [
+            { "duration": 2, "demandRenewable": [2, 8], "demandNonRenewable": [9, 2] },
+            { "duration": 3, "demandRenewable": [2, 6], "demandNonRenewable": [6, 2] },
+            { "duration": 6, "demandRenewable": [1, 1], "demandNonRenewable": [4, 1] }
+         ]
+      }, 
+      {
+         "id": 28, "successors": [],
+         "modes":
+         [
+            { "duration": 1, "demandRenewable": [9, 10], "demandNonRenewable": [3, 5] },
+            { "duration": 2, "demandRenewable": [7, 10], "demandNonRenewable": [2, 4] },
+            { "duration": 3, "demandRenewable": [6, 9], "demandNonRenewable": [1, 3] }
+         ]
+      }, 
+      {
+         "id": 29, "successors": [],
+         "modes":
+         [
+            { "duration": 3, "demandRenewable": [5, 8], "demandNonRenewable": [6, 7] },
+            { "duration": 3, "demandRenewable": [5, 8], "demandNonRenewable": [5, 8] },
+            { "duration": 6, "demandRenewable": [5, 8], "demandNonRenewable": [3, 3] }
+         ]
+      }
+   ]
+}
