@@ -12,3 +12,4 @@ __pycache__
 *.bak
 *.log
 .DS_Store
+version.info.properties
