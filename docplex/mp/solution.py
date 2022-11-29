@@ -7,7 +7,10 @@
 import sys
 import copy
 
-from cplex._internal._subinterfaces import CutType
+try:
+    from cplex._internal._subinterfaces import CutType
+except:
+    CutType = list
 
 try:  # pragma: no cover
     from itertools import zip_longest as izip_longest
@@ -849,18 +852,21 @@ class SolveSolution(object):
         """ Returns the number of cuts for a specific type.
 
         :param cut_type: a cut type.
-        :return: the number of cuts associated to this type of cut.
+        :return: the number of cuts associated to this type of cut. 0 if CPLEX is not present
         """
         cut_type_instance = CutType()
         if cut_type in cut_type_instance:
-            return self.get_cuts()[cut_type]
-        handle_error(logger=self.model, error="raise", msg="Cut type does not exist")
+            cuts = self.get_cuts()
+            name = cut_type_instance[cut_type]
+            return cuts[name]
+        return 0
+
 
 
     def get_cuts(self):
         """ Returns the number of cuts under the form of a dict(type -> number).
 
-        :return: the number of cuts under the form of a dict(type -> number).
+        :return: the number of cuts under the form of a dict(type -> number). Empty dict if CPLEX is not present.
         """
         m = self.model
         self.ensure_cuts(m, m.get_engine())

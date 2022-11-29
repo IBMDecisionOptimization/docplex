@@ -1,8 +1,14 @@
 Changelog
 ---------
 
-Changed in 2.24.231:
+Changed in 2.24.232:
 ````````````````````
+* Optional CPLEX import for qiskit
+* Fix in cut getter
+
+Changed in 2.24.231 (2022.11):
+``````````````````````````````
+
 * Support for CPLEX Optimization Studio 22.1.1 runtimes.
 * Cleanup of the code related to Watson Machine Learning.
 * In ``docplex.mp``:
