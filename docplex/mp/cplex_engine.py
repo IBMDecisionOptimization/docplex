@@ -11,7 +11,11 @@ import re
 import numbers
 import sys
 
-from cplex._internal._subinterfaces import CutType
+try:
+    from cplex._internal._subinterfaces import CutType
+except:
+    CutType = list
+
 from docplex.mp.engine import IEngine
 from docplex.mp.utils import DOcplexException, is_string
 from docplex.mp.constants import ConflictStatus
