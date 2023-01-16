@@ -636,6 +636,35 @@ class CpoModel(object):
                 self.parameters.__setattr__(k, v)
 
 
+    def read_ops_file(self, infile):
+        """ Load and set parameters of this model from an OPL-style .ops file.
+
+        This method loads parameters from an OPL-style .ops file.  Any existing
+        parameter settings which are not overridden by the settings from the
+        file will take their default values.
+
+        Args:
+            infile: Either a file name or an open file object.
+        Returns:
+            The loaded parameters, now associated with this model.
+
+        """
+        p = CpoParameters.read_ops_file(infile)
+        return self.set_parameters(p)
+
+    def export_parameters_as_ops_file(self, outfile):
+        """ Write parameters of this model to an OPL-style .ops file.
+
+        This method writes the non-default-valued parameters to an OPL-style .ops file.
+
+        Args:
+            outfile: Either a file name or an open file object.
+        Returns:
+            Nothing
+
+        """
+        self.parameters.export_as_ops_file(outfile)
+
     def get_parameters(self):
         """ Get the solving parameters associated to this model.
 
@@ -1333,7 +1362,7 @@ class CpoModel(object):
         require to explicitly create a CpoSolver instead of calling function at model level.
         Please refer to this class for more details.
 
-        This function is available on DOcplexcloud and with local CPO solver with release number greater or equal to 12.7.0.
+        This function is available on Watson Machine Learning and with local CPO solver with release number greater or equal to 12.7.0.
 
         Args:
             context (Optional): Complete solving context.
@@ -1379,7 +1408,7 @@ class CpoModel(object):
         require to explicitly create a CpoSolver instead of calling function at model level.
         Please refer to this class for more details.
 
-        This function is available on DOcplexcloud and with local CPO solver with release number greater or equal to 12.7.0.
+        This function is available on Watson Machine Learning and with local CPO solver with release number greater or equal to 12.7.0.
 
         Args:
             cnstr (Optional):   Optional constraint to be added to the model before invoking propagation.

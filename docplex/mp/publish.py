@@ -4,9 +4,6 @@
 # (c) Copyright IBM Corp. 2015, 2019
 # --------------------------------------------------------------------------
 
-from docplex.mp.progress import SolutionListener, ProgressClock
-from docplex.mp.qprogress import QProgressListener
-
 from docplex.util.environment import get_environment
 
 try:
@@ -15,105 +12,6 @@ except ImportError:
     pd = None
 
 from docplex.util.csv_utils import write_csv, write_table_as_csv
-
-
-class _BarrierProgressPubisher(QProgressListener):
-
-    def __init__(self, publish_hook=None):
-        super().__init__()
-        self.publish_hook = publish_hook
-
-    def notify_progress(self, qprogress_data):
-        env = get_environment()
-        # 1. Start with empty table
-        name_values = {}
-
-        # new stats for https://github.ibm.com/IBMDecisionOptimization/dd-planning/issues/2491
-        if env.is_dods():
-            name_values['STAT.cplex.solve.iterationCount'] = qprogress_data.current_nb_iterations
-            name_values['STAT.cplex.solve.elapsedTime'] = qprogress_data.time
-            name_values['STAT.cplex.solve.primalObjective'] = qprogress_data.primal_objective_value
-            name_values['STAT.cplex.solve.dualObjective'] = qprogress_data.dual_objective_value
-            name_values['STAT.cplex.solve.primalInfeasibility'] = qprogress_data.primal_infeas
-            name_values['STAT.cplex.solve.dualInfeasibility'] = qprogress_data.dual_infeas
-
-        # publish ..or perish...
-        if self.publish_hook is not None:
-            self.publish_hook(name_values)
-
-
-class _KpiRecorder(SolutionListener):
-
-    def __init__(self, model, clock=ProgressClock.Gap,
-                 publish_hook=None,
-                 kpi_publish_format=None, absdiff=None, reldiff=None):
-        super(_KpiRecorder, self).__init__(clock, absdiff, reldiff)
-        self.model = model
-        self._context = model.context
-        self.publish_hook = publish_hook
-        self.kpi_publish_format = kpi_publish_format or 'KPI.%s'
-        self.publish_name_fn = lambda kn: self.kpi_publish_format % kn
-
-        # stored dictionaries of kpi values (name: value)
-        self._kpi_dicts = []
-
-    def notify_start(self):
-        super(_KpiRecorder, self).notify_start()
-        self._kpi_dicts = []
-
-    @property
-    def nb_reported(self):
-        return len(self._kpi_dicts)
-
-    def notify_solution(self, sol):
-        env = get_environment()
-        pdata = self.current_progress_data
-        context = self._context
-
-        # 1. Start with empty table
-        name_values = {}
-        # 2. add predefined keys for obj, time.
-        name_values['PROGRESS_CURRENT_OBJECTIVE'] = sol.objective_value
-
-        # 3. store it (why???)
-        self._kpi_dicts.append(name_values)
-
-        # new stats for https://github.ibm.com/IBMDecisionOptimization/dd-planning/issues/2491
-        if env.is_dods():
-            name_values['PROGRESS_GAP'] = pdata.mip_gap
-            name_values['PROGRESS_BEST_OBJECTIVE'] = pdata.best_bound
-            name_values['STAT.cplex.solve.explored'] = pdata.current_nb_nodes
-            name_values['STAT.cplex.solve.opened'] = pdata.remaining_nb_nodes
-            name_values['STAT.cplex.solve.iterationCount'] = pdata.current_nb_iterations
-            name_values['STAT.cplex.solve.elapsedTime'] = pdata.time
-
-        # add KPIs
-        publish_name_fn = self.publish_name_fn
-        name_values.update({publish_name_fn(kp.name): kp.compute(sol) for kp in self.model.iter_kpis()})
-        name_values[publish_name_fn('_time')] = pdata.time
-
-        # usually publish kpis in environment...
-        if self.publish_hook is not None:
-            self.publish_hook(name_values)
-
-        # save kpis.csv table
-        if auto_publishing_kpis_table_names(context) is not None:
-            write_kpis_table(env=env,
-                             context=context,
-                             model=self.model,
-                             solution=sol)
-
-    def iter_kpis(self):
-        return iter(self._kpi_dicts)
-
-    def __as_df__(self, **kwargs):
-        try:
-            from pandas import DataFrame
-        except ImportError:
-            raise RuntimeError("convert as DataFrame: This feature requires pandas")
-
-        df = DataFrame(self._kpi_dicts, **kwargs)
-        return df
 
 
 def get_auto_publish_names(context, prop_name, default_name):

@@ -154,7 +154,10 @@ class Environment(object):
         if sys_platform == 'Windows':
             return 'x64_win64'
         elif sys_platform == 'Darwin':
-            return 'x86-64_osx'
+            if machine == 'x86_64':
+                return 'x86-64_osx'
+            else:
+                return 'arm64_osx'
         elif sys_platform == 'Linux':
             if machine == 'x86_64':
                 return 'x86-64_linux'
@@ -224,7 +227,7 @@ class Environment(object):
 
     def auto_configure(self, logger=None):
         self.check_cplex(logger=logger)
-        # check for pandas (watson studio)
+        # check for pandas (docplex_wml studio)
         self.check_pandas()
 
     def check_all(self):
@@ -306,7 +309,8 @@ class Environment(object):
                         # user provided a cos location that was not right, raise warning
                         warnings.warn("Could not load CPLEX from Location provided by DOCPLEX_COS_LOCATION=%s. Using default locations." % user_cos_location)
                 if cplex is None:
-                    try_environs = ['CPLEX_STUDIO_DIR221',
+                    try_environs = ['CPLEX_STUDIO_DIR2211',
+                                    'CPLEX_STUDIO_DIR221',
                                     'CPLEX_STUDIO_DIR20101',
                                     'CPLEX_STUDIO_DIR201',
                                     'CPLEX_STUDIO_DIR1210',

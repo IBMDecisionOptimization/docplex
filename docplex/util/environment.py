@@ -12,7 +12,7 @@ optimization program to run independently from the solving environment.
 This environment may be:
 
  * on premise, using a local version of CPLEX Optimization Studio to solve MP problems, or
- * on DOcplexcloud, with the Python program running inside the Python Worker.
+ * on Watson Machine Learning, with the Python program running inside the Python Worker.
  * on Decision Optimization in Watson Machine Learning.
 
 As much as possible, the adaptation to the solving environment is
@@ -67,16 +67,15 @@ Environment representation can be accessed with different ways:
 '''
 from collections import deque
 import json
-from functools import partial
 import logging
 import os
 import shutil
 import sys
-import tempfile
 import threading
 import time
-import uuid
 import warnings
+
+
 
 try:
     from string import maketrans, translate
@@ -92,20 +91,35 @@ except ImportError:
 from six import iteritems
 
 from docplex.util import lazy
-from docplex.util.logging_utils import LoggerToDocloud
-from docplex.util.csv_utils import write_table_as_csv
 
-from .ws.util import START_SOLVE_EVENT, END_SOLVE_EVENT, Tracker
 
-in_ws_nb = None
 
-if in_ws_nb is None:
-    in_notebook = ('ipykernel' in sys.modules)
-    dsx_home_set = 'dsxuser' in os.environ.get('HOME', '').split('/')
-    has_hw_spec = 'RUNTIME_HARDWARE_SPEC' in os.environ
-    rt_region_set = 'RUNTIME_ENV_REGION' in os.environ
+def make_new_kpis_dict(allkpis=None, sense = None, model_type = None, int_vars=None, continuous_vars=None,
+                       linear_constraints=None, bin_vars=None,
+                       quadratic_constraints=None, total_constraints=None,
+                       total_variables=None):
+    # This is normally called once at the beginning of a solve
+    # those are the details required for docplexcloud and DODS legacy
+    kpis_name= [ kpi.name for kpi in allkpis ]
+    kpis = {'MODEL_DETAIL_OBJECTIVE_SENSE' : sense,
+            'MODEL_DETAIL_INTEGER_VARS': int_vars,
+            'MODEL_DETAIL_CONTINUOUS_VARS': continuous_vars,
+            'MODEL_DETAIL_CONSTRAINTS': linear_constraints,
+            'MODEL_DETAIL_BOOLEAN_VARS': bin_vars,
+            'MODEL_DETAIL_KPIS': json.dumps(kpis_name)}
+    # those are the ones required per https://github.ibm.com/IBMDecisionOptimization/dd-planning/issues/2491
+    new_details = {'STAT.cplex.modelType' : model_type,
+                   'STAT.cplex.size.integerVariables': int_vars,
+                   'STAT.cplex.size.continousVariables': continuous_vars,
+                   'STAT.cplex.size.linearConstraints': linear_constraints,
+                   'STAT.cplex.size.booleanVariables': bin_vars,
+                   'STAT.cplex.size.constraints': total_constraints,
+                   'STAT.cplex.size.quadraticConstraints': quadratic_constraints,
+                   'STAT.cplex.size.variables': total_variables,
+                   }
 
-    in_ws_nb = in_notebook and dsx_home_set and has_hw_spec and rt_region_set
+    kpis.update(new_details)
+    return kpis
 
 
 log_level_mapping = {'OFF': None,
@@ -205,7 +219,7 @@ class Environment(object):
 
     Attributes:
         abort_callbacks: A list of callbacks that are called when the script is
-            run on DOcplexcloud and a job abort operation is requested. You
+            run on Watson Machine Learning and a job abort operation is requested. You
             add your own callback using::
 
                 env.abort_callbacks += [your_cb]
@@ -259,7 +273,7 @@ class Environment(object):
 
     def get_record_history_fields(self):
         if self._record_history_fields is None:
-            if self.is_dods():
+            if self.is_wmlworker:
                 self._record_history_fields = ['PROGRESS_BEST_OBJECTIVE',
                                                'PROGRESS_CURRENT_OBJECTIVE',
                                                'PROGRESS_GAP']
@@ -272,14 +286,14 @@ class Environment(object):
         self._record_history_fields = value
 
     # let record_history_fields be a property that is lazy initialized
-    # this gives the opportunity to set is_dods before record history fields are needed
+    # this gives the opportunity to set is_wmlworker before record history fields are needed
     record_history_fields = property(get_record_history_fields, set_record_history_fields)
 
     def store_solution(self, solution):
         '''Stores the specified solution.
 
         This method guarantees that the solution is fully saved if the model
-        is running on DOcplexcloud python worker and an abort of the job is
+        is running on Watson Machine Learning python worker and an abort of the job is
         triggered.
 
         For each (key, value) pairs of the solution, the default solution
@@ -305,7 +319,7 @@ class Environment(object):
 
         An input of the program is a file that is available in the working directory.
 
-        When run on DOcplexcloud, all input attachments are copied to the working directory before
+        When run on Watson Machine Learning, all input attachments are copied to the working directory before
         the program is run. ``get_input_stream`` lets you open the input attachments of the job.
 
         Args:
@@ -402,7 +416,7 @@ class Environment(object):
         When run on premise, ``filename`` is copied to the the working
         directory (if not already there) under the name ``name``.
 
-        When run on DOcplexcloud, the file is attached as output attachment.
+        When run on Watson Machine Learning, the file is attached as output attachment.
 
         Args:
             name: Name of the output object.
@@ -418,7 +432,7 @@ class Environment(object):
         multiple output objects.
 
         When run on premise, the output of the program is written as files in
-        the working directory. When run on DOcplexcloud, the files are attached
+        the working directory. When run on Watson Machine Learning, the files are attached
         as output attachments.
 
         The stream is opened in binary mode, and will accept 8 bits data.
@@ -446,7 +460,7 @@ class Environment(object):
     def get_parameters(self):
         ''' Returns a dict containing all parameters of the program.
 
-        On DOcplexcloud, this method returns the job parameters.
+        on Watson Machine Learning, this method returns the job parameters.
         On local solver, this method returns ``os.environ``.
 
         Returns:
@@ -457,7 +471,7 @@ class Environment(object):
     def get_parameter(self, name):
         ''' Returns a parameter of the program.
 
-        On DOcplexcloud, this method returns the job parameter whose name is specified.
+        on Watson Machine Learning, this method returns the job parameter whose name is specified.
         On local solver, this method returns the environment variable whose name is specified.
 
         Args:
@@ -673,11 +687,17 @@ class Environment(object):
         # logging.NOTSET is zero so will return false
         return (self.get_engine_log_level() <= logging.DEBUG) if lvl is not None else False
 
-    def is_dods(self):
-        '''Returns true if this environment in running in DODS.
-        '''
-        value = os.environ.get("IS_DODS")
-        return str(value).lower() == "true"
+
+
+    @property
+    def is_local(self):
+        return False
+    @property
+    def is_wmlworker(self):
+        return False
+    @property
+    def is_wsnotebook(self):
+        return False
 
 
 class AbstractLocalEnvironment(Environment):
@@ -693,6 +713,7 @@ class AbstractLocalEnvironment(Environment):
         # runtime. The number of cores available to the runtime are
         # specified in an environment variable instead.
         self._available_cores = None
+        #TODO VB: Is it useful? We have a priori call to self.solve_hook.get_available_core_count() in WorkerEnv?
         RUNTIME_HARDWARE_SPEC = os.environ.get('RUNTIME_HARDWARE_SPEC', None)
         if RUNTIME_HARDWARE_SPEC:
             try:
@@ -730,171 +751,9 @@ class AbstractLocalEnvironment(Environment):
 class LocalEnvironment(AbstractLocalEnvironment):
     def __init__(self):
         super(LocalEnvironment, self).__init__()
-
-
-class WSNotebookEnvironment(AbstractLocalEnvironment):
-    def __init__(self, tracker=None):
-        super(WSNotebookEnvironment, self).__init__()
-        self._start_time = None
-        self.solve_id = str(uuid.uuid4())  # generate random uuid for each session
-        self.model_type = None  # set in start solve
-        self.tracker = tracker if tracker else Tracker()
-
-    def notify_start_solve(self, solve_details):
-        super(WSNotebookEnvironment, self).notify_start_solve(solve_details)
-        # Prepare data for WS
-        detail_type = solve_details.get('MODEL_DETAIL_TYPE', None)
-        model_type = "cpo" if detail_type and detail_type.startswith('CPO') else "cplex"
-        num_constraints = solve_details.get('MODEL_DETAIL_CONSTRAINTS', 0)
-        num_variables = solve_details.get('MODEL_DETAIL_CONTINUOUS_VARS', 0) \
-            + solve_details.get('MODEL_DETAIL_INTEGER_VARS', 0) \
-            + solve_details.get('MODEL_DETAIL_BOOLEAN_VARS', 0) \
-            + solve_details.get('MODEL_DETAIL_INTERVAL_VARS', 0) \
-            + solve_details.get('MODEL_DETAIL_SEQUENCE_VARS', 0)
-        model_statistics = {'numConstraints': num_constraints,
-                            'numVariables': num_variables}
-        cplex_edition = _get_cplex_edition()
-        details = {'modelType': model_type,
-                   'modelSize': model_statistics,
-                   'solveId': self.solve_id,
-                   'edition': cplex_edition}
-        self.model_type = model_type
-        self.tracker.notify_ws(START_SOLVE_EVENT, details)
-        self._start_time = time.time()
-
-    def notify_end_solve(self, status, solve_time=None):
-        super(WSNotebookEnvironment, self).notify_end_solve(status, solve_time=solve_time)
-        # do the watson studio things
-        if (self._start_time and solve_time is None):
-            solve_time = (time.time() - self._start_time)
-        details = {'solveTime': solve_time,
-                   'modelType': self.model_type,
-                   'solveId': self.solve_id}
-        self.tracker.notify_ws(END_SOLVE_EVENT, details)
-        self._start_time = None
-
-
-class OutputFileWrapper(object):
-    # Wraps a file object so that on __exit__() and on close(), the wrapped file is closed and
-    # the output attachments are actually set in the worker
-    def __init__(self, file, solve_hook, attachment_name):
-        self.file = file
-        self.solve_hook = solve_hook
-        self.attachment_name = attachment_name
-        self.closed = False
-
-    def __getattr__(self, name):
-        if name == 'close':
-            return self.my_close
-        else:
-            return getattr(self.file, name)
-
-    def __enter__(self, *args, **kwargs):
-        return self.file.__enter__(*args, **kwargs)
-
-    def __exit__(self, *args, **kwargs):
-        self.file.__exit__(*args, **kwargs)
-        self.close()
-
-    def close(self):
-        # actually close the output then set attachment
-        if not self.closed:
-            self.file.close()
-            self.solve_hook.set_output_attachments({self.attachment_name: self.file.name})
-            self.closed = True
-
-
-def worker_env_stop_callback(env):
-    # wait for the output lock to be released to make sure that the latest
-    # solution store operation has ended.
-    with env.output_lock:
-        pass
-    # call all abort callbacks
-    for cb in env.abort_callbacks:
-        cb()
-
-
-class WorkerEnvironment(Environment):
-    # The solving environment when we run in the DOcplexCloud worker.
-    def __init__(self, solve_hook):
-        super(WorkerEnvironment, self).__init__()
-        self.solve_hook = solve_hook
-        if solve_hook:
-            self.solve_hook.stop_callback = partial(worker_env_stop_callback, self)
-        self.logger = None
-        if hasattr(self.solve_hook, 'logger'):
-            self.logger = LoggerToDocloud(self.solve_hook.logger)
-        else:
-            self.logger = logging.getLogger('docplex.util.environment.logger')
-
-    def get_available_core_count(self):
-        return self.solve_hook.get_available_core_count()
-
-    def get_input_stream(self, name):
-        # inputs are in the current working directory
-        return open(name, "rb")
-
-    def get_output_stream(self, name):
-        # open the output in a place we know we can write
-        f = tempfile.NamedTemporaryFile(mode="w+b", delete=False)
-        return OutputFileWrapper(f, self.solve_hook, name)
-
-    def set_output_attachment(self, name, filename):
-        self.solve_hook.set_output_attachments({name: filename})
-
-    def get_parameter(self, name):
-        return self.solve_hook.get_parameter_value(name)
-
-    def get_parameters(self, ):
-        # This is a typo in _DockerSolveHook, this should be "parameters"
-        return self.solve_hook.parameter
-
-    def publish_solve_details(self, details):
-        super(WorkerEnvironment, self).publish_solve_details(details)
-        self.solve_hook.update_solve_details(details)
-        # if on dods, we want to publish stats.csv if any
-        if self.is_dods():
-            self._publish_stats_csv(details)
-
-    def _publish_stats_csv(self, stats):
-        # generate the stats.csv file with the specified stats
-        names = ['stats.csv']
-        stats_table = []
-        for k in stats:
-            if k.startswith("STAT."):
-                stats_table.append([k, stats[k]])
-        if stats_table:
-            field_names = ['Name', 'Value']
-            for name in names:
-                write_table_as_csv(self, stats_table, name, field_names)
-
-    def notify_start_solve(self, solve_details):
-        super(WorkerEnvironment, self).notify_start_solve(solve_details)
-        self.solve_hook.notify_start_solve(None,  # model
-                                           solve_details)
-
-    def notify_end_solve(self, status, solve_time=None):
-        super(WorkerEnvironment, self).notify_end_solve(status)
-        try:
-            from docplex.util.status import JobSolveStatus
-            engine_status = JobSolveStatus(status) if status else JobSolveStatus.UNKNOWN
-            self.solve_hook.notify_end_solve(None,  # model, unused
-                                             None,  # has_solution, unused
-                                             engine_status,
-                                             None,  # reported_obj, unused
-                                             None,  # var_value_dict, unused
-                                             )
-        except ImportError:
-            raise RuntimeError("This should have been called only when in a worker environment")
-
-    def set_stop_callback(self, cb):
-        warnings.warn('set_stop_callback() is deprecated since 2.4 - Use Environment.abort_callbacks.append(cb) instead')
-        self.abort_callbacks += [cb]
-
-    def get_stop_callback(self):
-        warnings.warn('get_stop_callback() is deprecated since 2.4 - Use the abort_callbacks property instead')
-        return self.abort_callbacks[1] if self.abort_callbacks else None
-
+    @property
+    def is_local(self):
+        return True
 
 class OverrideEnvironment(object):
     '''Allows to temporarily replace the default environment.
@@ -921,28 +780,28 @@ class OverrideEnvironment(object):
 
 
 def _get_default_environment():
-    # creates a new instance of the default environment
     try:
-        import docplex.worker.solvehook as worker_env
-        hook = worker_env.get_solve_hook()
-        if hook:
-            return WorkerEnvironment(hook)
-    except ImportError:
-        pass
-    if in_ws_nb:
-        return WSNotebookEnvironment()
-    return LocalEnvironment()
-
+        try:
+            from docplex_wml.util import _get_wml_default_environment
+            return _get_wml_default_environment()
+        except ImportError:
+            pass
+        return LocalEnvironment()
+    except Exception as e:
+        print("We should never get here")
+        print(e)
 
 default_environment = _get_default_environment()
 
 
 def _get_cplex_edition():
+    import docplex.mp.model
+    import docplex.mp.environment
+    version = docplex.mp.environment.Environment().cplex_version
+    if default_environment.is_wmlworker:
+        return "%s%s" % (version, "")
     with OverrideEnvironment(Environment()):
-        import docplex.mp.model
-        import docplex.mp.environment
         edition = " ce" if docplex.mp.model.Model.is_cplex_ce() else ""
-        version = docplex.mp.environment.Environment().cplex_version
         return "%s%s" % (version, edition)
 
 
@@ -966,7 +825,7 @@ def get_input_stream(name):
 
     An input of the program is a file that is available in the working directory.
 
-    When run on DOcplexcloud, all input attachments are copied to the working directory before
+    When run on Watson Machine Learning, all input attachments are copied to the working directory before
     the program is run. ``get_input_stream`` lets you open the input attachments of the job.
 
     Args:
@@ -988,7 +847,7 @@ def set_output_attachment(name, filename):
     When run on premise, ``filename`` is copied to the the working
     directory (if not already there) under the name ``name``.
 
-    When run on DOcplexcloud, the file is attached as output attachment.
+    When run on Watson Machine Learning, the file is attached as output attachment.
 
     Args:
         name: Name of the output object.
@@ -1005,7 +864,7 @@ def get_output_stream(name):
     multiple output objects.
 
     When run on premise, the output of the program is written as files in
-    the working directory. When run on DOcplexcloud, the files are attached
+    the working directory. When run on Watson Machine Learning, the files are attached
     as output attachments.
 
     The stream is opened in binary mode, and will accept 8 bits data.
@@ -1084,7 +943,7 @@ def get_available_core_count():
 def get_parameter(name):
     ''' Returns a parameter of the program, with the default environment.
 
-    On DOcplexcloud, this method returns the job parameter whose name is specified.
+    on Watson Machine Learning, this method returns the job parameter whose name is specified.
 
     Args:
         name: The name of the parameter.

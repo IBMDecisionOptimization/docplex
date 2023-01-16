@@ -99,7 +99,6 @@ class SolveDetails(object):
                     ("_linear_nonzeros", "MODEL_DETAIL_NON_ZEROS", int, 0),
                     ("_miprelgap", "cplex.miprelgap", float, _NO_GAP),
                     ('_best_bound', 'PROGRESS_BEST_OBJECTIVE', float, _NO_BEST_BOUND),
-                    ("_md5", "cplex.model.md5", str, ""),
                     ('_n_iterations', 'cplex.itcount', int, 0),
                     ('_n_nodes_processed', 'cplex.nodes.processed', int, 0)
                     )
@@ -158,40 +157,6 @@ class SolveDetails(object):
 
         """
         return self._solve_status_code
-
-    # status string
-    # CPX_STAT_ABORT_DETTIME_LIM =  25
-    # CPX_STAT_ABORT_DUAL_OBJ_LIM =  22
-    # CPX_STAT_ABORT_IT_LIM =  10
-    # CPX_STAT_ABORT_OBJ_LIM =  12
-    # CPX_STAT_ABORT_PRIM_OBJ_LIM =  21
-    # CPX_STAT_ABORT_TIME_LIM =  11
-    # CPX_STAT_ABORT_USER =  13
-    # CPX_STAT_CONFLICT_ABORT_CONTRADICTION =  32
-    # CPX_STAT_CONFLICT_ABORT_DETTIME_LIM =  39
-    # CPX_STAT_CONFLICT_ABORT_IT_LIM =  34
-    # CPX_STAT_CONFLICT_ABORT_MEM_LIM =  37
-    # CPX_STAT_CONFLICT_ABORT_NODE_LIM =  35
-    # CPX_STAT_CONFLICT_ABORT_OBJ_LIM =  36
-    # CPX_STAT_CONFLICT_ABORT_TIME_LIM =  33
-    # CPX_STAT_CONFLICT_ABORT_USER =  38
-    # CPX_STAT_CONFLICT_FEASIBLE =  30
-    # CPX_STAT_CONFLICT_MINIMAL =  31
-    # CPX_STAT_FEASIBLE =  23
-    # CPX_STAT_FEASIBLE_RELAXED_INF =  16
-    # CPX_STAT_FEASIBLE_RELAXED_QUAD =  18
-    # CPX_STAT_FEASIBLE_RELAXED_SUM =  14
-    # CPX_STAT_FIRSTORDER =  24
-    # CPX_STAT_INFEASIBLE =  3
-    # CPX_STAT_INForUNBD =  4
-    # CPX_STAT_NUM_BEST =  6
-    # CPX_STAT_OPTIMAL =  1
-    # CPX_STAT_OPTIMAL_FACE_UNBOUNDED =  20
-    # CPX_STAT_OPTIMAL_INFEAS =  5
-    # CPX_STAT_OPTIMAL_RELAXED_INF =  17
-    # CPX_STAT_OPTIMAL_RELAXED_QUAD =  19
-    # CPX_STAT_OPTIMAL_RELAXED_SUM =  15
-    # CPX_STAT_UNBOUNDED =  2
 
     @property
     def status(self):
@@ -336,79 +301,3 @@ class SolveDetails(object):
     @property
     def quality_metrics(self):
         return self._quality_metrics
-
-# cplex.miprelgap: 0
-# cplex.quality.int.CPX_MAX_QCSLACK: -1
-# MODEL_DETAIL_CONSTRAINTS: 78
-# cplex.quality.int.CPX_MAX_SCALED_PRIMAL_RESIDUAL: 66
-# cplex.quality.double.CPX_SUM_QCSLACK: 0
-# cplex.semiintegers: 0
-# cplex.solution.type: 3
-# cplex.statusstring: integer optimal solution
-# cplex.status: 101
-# cplex.quality.double.CPX_SUM_PRIMAL_RESIDUAL: 2.10942374678779742680490016937255859375E-15
-# cplex.quality.int.CPX_MAX_INDSLACK_INFEAS: -1
-# cplex.numquad: 0
-# cplex.quality.double.CPX_MAX_QCSLACK_INFEAS: 0
-# cplex.quality.int.CPX_MAX_SLACK: 3
-# cplex.quality.double.CPX_MAX_SCALED_X: 5.99999999999999911182158029987476766109466552734375
-# cplex.quality.int.CPX_MAX_QCPRIMAL_RESIDUAL: -1
-# cplex.quality.double.CPX_SUM_SCALED_SLACK: 10.608333333333337833437326480634510517120361328125
-# MODEL_DETAIL_CONTINUOUS_VARS: 26
-# cplex.nodes.processed: 0
-# cplex.quality.double.CPX_MAX_SCALED_PRIMAL_INFEAS: 1.1102230246251565404236316680908203125E-15
-# cplex.model.md5: B019A9CEBA436F0A65EAD04B9378517E
-# MODEL_DETAIL_TYPE: MILP
-# cplex.quality.double.CPX_MAX_PRIMAL_RESIDUAL: 4.44089209850062616169452667236328125E-16
-# PROGRESS_CURRENT_OBJECTIVE: 144.266750000000001818989403545856475830078125
-# cplex.quality.double.CPX_MAX_X: 5.99999999999999911182158029987476766109466552734375
-# cplex.infeasible: false
-# MODEL_DETAIL_NON_ZEROS: 189
-# MODEL_DETAIL_BOOLEAN_VARS: 40
-# MODEL_DETAIL_LINEAR_CONSTRAINTS: 78
-# cplex.quality.double.CPX_SUM_SCALED_PRIMAL_RESIDUAL: 2.10942374678779742680490016937255859375E-15
-# cplex.qpnonzeros: 0
-# cplex.quality.int.CPX_MAX_PRIMAL_INFEAS: -62
-# MODEL_DETAIL_INTEGER_VARS: 0
-# cplex.quality.double.CPX_MAX_INDSLACK_INFEAS: 0
-# cplex.quality.double.CPX_SUM_PRIMAL_INFEAS: 4.55191440096314181573688983917236328125E-15
-# cplex.quality.double.CPX_SUM_SCALED_PRIMAL_INFEAS: 4.55191440096314181573688983917236328125E-15
-# cplex.solution.dfeas: true
-# cplex.quality.int.CPX_MAX_SCALED_PRIMAL_INFEAS: -62
-# cplex.quality.double.CPX_MAX_QCSLACK: 0
-# cplex.quality.double.CPX_SUM_X: 85.18333333333333712289459072053432464599609375
-# cplex.quality.double.CPX_MAX_QCPRIMAL_RESIDUAL: 0
-# cplex.quality.double.CPX_MAX_SLACK: 1.875
-# cplex.indicatorconstraints: 0
-# cplex.nodes.left: 0
-# cplex.quality.double.CPX_SUM_QCPRIMAL_RESIDUAL: 0
-# cplex.quality.double.CPX_MAX_SCALED_PRIMAL_RESIDUAL: 4.44089209850062616169452667236328125E-16
-# PROGRESS_GAP: 4.930898076512417
-# cplex.quality.double.CPX_SUM_QCSLACK_INFEAS: 0
-# cplex.quality.int.CPX_MAX_QCSLACK_INFEAS: -1
-# cplex.quality.double.CPX_SUM_INDSLACK_INFEAS: 0
-# cplex.quality.double.CPX_MAX_PRIMAL_INFEAS: 1.1102230246251565404236316680908203125E-15
-# cplex.quality.double.CPX_SUM_SCALED_X: 85.18333333333333712289459072053432464599609375
-# cplex.quality.int.CPX_MAX_X: 1
-# cplex.objective.sense: -1
-# cplex.quality.int.CPX_MAX_PRIMAL_RESIDUAL: 66
-# cplex.quality.double.CPX_MAX_INT_INFEAS: 7.7715611723760957829654216766357421875E-16
-# cplex.solution.method: 12
-# cplex.parameters.md5: B08B4BE748EC31D8D31294F0EBE7F26D
-# cplex.time: 0.03053903579711914
-# cplex.quality.int.CPX_MAX_SCALED_X: 1
-# cplex.quality.double.CPX_SUM_INT_INFEAS: 1.5543122344752191565930843353271484375E-15
-# cplex.columns: 66
-# cplex.sosconstraints: 0
-# cplex.mipitcount: 5
-# cplex.quality.int.CPX_MAX_INT_INFEAS: 14
-# cplex.problemtype: 1
-# cplex.quality.double.CPX_MAX_SCALED_SLACK: 1.875
-# cplex.solution.pfeas: true
-# cplex.semicontinuous: 0
-# cplex.quality.double.CPX_SUM_SLACK: 10.608333333333337833437326480634510517120361328125
-# MODEL_DETAIL_QUADRATIC_CONSTRAINTS: 0
-# cplex.mipabsgap: 0
-# cplex.quality.int.CPX_MAX_SCALED_SLACK: 3
-# cplex.dettime: 0.2523078918457031
-# PROGRESS_BEST_OBJECTIVE: 144.266750000000001818989403545856475830078125

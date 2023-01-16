@@ -48,7 +48,7 @@ from docplex.mp.utils import DOcplexException
 from docplex.mp.error_handler import docplex_fatal
 
 try:
-    from docplex.worker.solvehook import get_solve_hook
+    from docplex_wml.worker.solvehook import get_solve_hook
 except ImportError:
     get_solve_hook = None
 

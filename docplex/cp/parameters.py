@@ -64,7 +64,7 @@ The following list gives the summary of all public parameters.
    The value is a symbol in ['On', 'Off']. Default value is 'Off'.
  * :attr:`~CpoParameters.KPIDisplay`: Controls the display of the KPI values in the log.
    The value is a symbol in ['SingleLine', 'MultipleLines']. Default value is 'SingleLine'.
-   
+
 **Presolve**
 
  * :attr:`~CpoParameters.Presolve`: Controls the presolve of the model to produce more compact formulations and to achieve more domain reduction.
@@ -734,7 +734,7 @@ class CpoParameters(Context):
         not have to be integer. For example, value 1.5 means that first worker spends 100% of the time by
         failure-directed search, second worker 50% and remaining workers 0%. See also Workers For more
         information about failure-directed search see parameter FailureDirectedSearch.
-        
+
         The value is a non-negative integer, or None or Auto (default) that does not set any limit.
         """
         return self.get_attribute('FailureDirectedSearchEmphasis')
@@ -1270,4 +1270,115 @@ class CpoParameters(Context):
                 assert val in vtyp, "Value of parameter '{}' should be in {}".format(name, vtyp)
         # Set the value
         self.set_attribute(name, val)
+
+
+    #--- I/O ----
+    @classmethod
+    def _read_ops_file_to_dict(cls, infile):
+        def numerize(s):
+            allt = (int, float)
+            n = s
+            if   n == 'false': n = 'Off'
+            elif n == 'true': n = 'On'
+            for t in allt:
+                try:
+                    n = t(s)
+                    break
+                except ValueError:
+                    pass
+            return n
+
+        import xml.etree.ElementTree as ET
+
+        std_params = tuple(ALL_PARAMETER_NAMES)
+        lc_params = tuple(p.lower() for p in std_params)
+
+        if isinstance(infile, str):
+            with open(infile) as f:
+                ops_text = f.read()
+        else:
+                ops_text = infile.read()
+
+        root = ET.fromstring(ops_text)
+
+        cp_node = []
+        if root.tag == 'settings':
+            for child in root:
+                if child.tag == 'category' and child.attrib.get('name', '') == 'cp':
+                    cp_node = child
+                    break
+
+        values = {}
+        setting_names = {x.lower(): x for x in ALL_PARAMETER_NAMES}
+        for child in cp_node:
+            if child.tag == 'setting':
+                if 'name' in child.attrib and 'value' in child.attrib:
+                    nm = child.attrib['name']
+                    try:
+                        idx = lc_params.index(nm.lower())
+                        nm = std_params[idx]
+                    except ValueError:
+                        pass
+                    values[nm] = numerize(child.attrib['value'])
+                else:
+                    raise AttributeError('Bad XML .ops file: bad attributes {0}'.format(child.attrib))
+            else:
+                raise AttributeError('Bad XML .ops file: unknown tag {0}'.format(child.tag))
+        return values
+
+
+    @classmethod
+    def read_ops_file(cls, infile):
+        """ Read an OPL-style .ops file, generating a parameter set.
+        Args:
+            infile: Either a file name or an open file object.
+        Returns:
+            An instance of this class, containing the parameter settings.
+        """
+        param_dict = cls._read_ops_file_to_dict(infile)
+        return cls(**param_dict)
+
+
+    def _export_as_ops_file_to_string(self):
+        from xml.etree.ElementTree import Element
+        from xml.etree import ElementTree
+        from xml.dom import minidom
+
+        def prettify(elem):
+            """Return a pretty-printed XML string for the Element.
+            """
+            rough_string = ElementTree.tostring(elem, 'utf-8')
+            reparsed = minidom.parseString(rough_string)
+            return reparsed.toprettyxml(indent="  ")
+
+        setting_names = {x.lower(): x for x in ALL_PARAMETER_NAMES}
+
+        settings = Element("settings")
+        settings.attrib = {"version": "2"}
+        category = Element("category")
+        category.attrib = {"name": "cp"}
+        settings.append(category)
+
+        for p in self.keys():
+            name = p.lower() if p.lower() in setting_names else p
+            value = str(self[p])
+
+            child = Element('setting')
+            if value == "On":
+                value = "true"
+            if value == "Off":
+                value = "false"
+            child.attrib = {"name": name, "value": value}
+            category.append(child)
+
+        return prettify(settings)
+
+
+    def export_as_ops_file(self, outfile):
+        b = bytes(self._export_as_ops_file_to_string(), 'utf-8')
+        if isinstance(outfile, str):
+            with open(outfile, mode='w') as out:
+                out.write(b)
+        else:
+                outfile.write(b)
 

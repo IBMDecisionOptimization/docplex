@@ -8,7 +8,7 @@
 import os
 import sys
 import warnings
-from itertools import chain
+from itertools import chain, product
 from io import StringIO
 
 from docplex.mp.aggregator import ModelAggregator
@@ -5739,6 +5739,16 @@ class Model(object):
         prm_path = self._resolve_path(path, basename, extension='.prm')
         self.parameters.export_prm_to_path(path=prm_path)
         return prm_path
+
+    def export_parameters_as_ops(self, path=None, basename=None):
+        # path is either a nonempty path string or None
+        self._checker.typecheck_string(path, accept_none=True, accept_empty=False)
+        self._checker.typecheck_string(basename, accept_none=True, accept_empty=False)
+
+        # combination of path/directory and basename resolution are done in resolve_path
+        ops_path = self._resolve_path(path, basename, extension='.ops')
+        self.parameters.export_as_ops_file(filename=ops_path)
+        return ops_path
 
     def export_annotations(self, path=None, basename=None):
         from docplex.mp.anno import ModelAnnotationPrinter
