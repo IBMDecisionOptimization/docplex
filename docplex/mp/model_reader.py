@@ -21,6 +21,11 @@ from docplex.mp.cplex_engine import CplexEngine
 
 from docplex.mp.quad import VarPair
 
+import os
+import xml.etree.ElementTree as ET
+import tempfile
+
+
 
 class ModelReaderError(DOcplexException):
     pass
@@ -118,6 +123,82 @@ class ModelReader(object):
         return sense_dict.get(cpx_sense)
 
     @classmethod
+    def read_ops_file(cls, filename, version=None):
+        """ Reads an OPL .ops setting file and builds a CPLEX parameter group.
+
+        Reads a .ops file and returns a DOcplex parameter group instance.
+        All CPO and OPL settings are ignored. This parameter object can be used in a solve().
+        .ops file have dedicated User Interface in OPL IDE and Cloud Pak for Data Experiments, which ease
+        the selection of engine settings.
+
+        Args:
+            filename: a path string
+            version: optional CPLEX version.
+
+        Returns:
+            A `RootParameterGroup object`, if the read operation succeeds, else None.
+        """
+        # We parse the XML file to get the list of cplex params names in OPL naming convention and their value.
+        # We rely on the old 12.x CPLEX naming convention CPX_PARAM_ instead of standard CPXPARAM_ as in OPL runtime to rebuild the names.
+        # We build a temporary .prm and import it in docplex with existing method.
+        # We can't do a cleaner way as not all CPLEX C methods related to settings are available in python.
+        # Adding them would only work in a next future version and not previous ones...
+
+        tree = ET.parse(filename)
+        root = tree.getroot()
+        # Find the CPLEX section
+        # < settings version = "2" >
+        # < category name = "cplex" >
+        # < setting  name = "advind"  value = "2" / >
+
+        cplex_node = None
+        if root.tag == "settings":
+            for child in root:
+                if child.tag == "category" and child.attrib.get("name", "") == "cplex":
+                    cplex_node = child
+                    break
+        values = {}
+        if cplex_node is not None:
+            for child in cplex_node:
+                if child.tag == "setting":
+                    if "name" in child.attrib and "value" in child.attrib:
+                        # Some settings have different names from OPL to CPLEX
+                        def get_name(name):
+                            if name == "rootalg":
+                                name = "STARTALG"
+                            elif name == "nodealg":
+                                name = "SUBALG"
+                            return "CPX_PARAM_" + name.upper()
+
+                        values[get_name(child.attrib["name"].lower())] = child.attrib["value"]
+                    else:
+                        raise Exception("Bad XML .ops file: bad attributes {0}".format(child.attrib))
+                else:
+                    raise Exception("Bad XML .ops file: unknown tag {0}".format(child.tag))
+        else:
+            return None
+
+        # clean up param input
+        def boolean_to_int(b):
+            if b == "true":
+                return 1
+            elif b == "false":
+                return 0
+            else:
+                return b
+
+        values = {k: boolean_to_int(v) for k, v in values.items()}
+
+        with tempfile.NamedTemporaryFile(suffix=".prm", delete=False) as prm_file:
+            if version is not None:
+                prm_file.write("CPLEX Parameter File Version {}\n".format(version).encode('utf-8'))
+            for k, v in values.items():
+                prm_file.write("{0} {1}\n".format(k, v).encode('utf-8'))
+
+        prms = ModelReader.read_prm(prm_file.name)
+        os.remove(prm_file.name)
+        return prms
+    @classmethod
     def read_prm(cls, filename):
         """ Reads a CPLEX PRM file.
 
@@ -130,9 +211,6 @@ class ModelReader(object):
         Returns:
             A `RootParameterGroup object`, if the read operation succeeds, else None.
         """
-        # TODO: Clean up - now creating an adapter raise importError if CPLEX not found
-        # if not Cplex:  # pragma: no cover
-        #    raise RuntimeError("ModelReader.read_prm() requires CPLEX runtime.")
         with _CplexReaderFileContext(filename, read_method=["parameters", "read_file"]) as adapter:
             cpx = adapter.cpx
             if cpx:

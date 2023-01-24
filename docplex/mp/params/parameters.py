@@ -851,6 +851,47 @@ class RootParameterGroup(ParameterGroup):
         self.export_prm(oss, overload_params)
         return oss.getvalue()
 
+    def export_as_ops_file(self, filename):
+        with open(filename, mode='w') as out:
+            out.write(self.export_as_ops_file_to_string())
+
+    def export_as_ops_file_to_string(self):
+        from xml.etree.ElementTree import Element
+        from xml.etree import ElementTree
+        from xml.dom import minidom
+
+        def prettify(elem):
+            """Return a pretty-printed XML string for the Element.
+            """
+            rough_string = ElementTree.tostring(element=elem, encoding='utf-8')
+            reparsed = minidom.parseString(rough_string)
+            return reparsed.toprettyxml(indent="  ", )
+
+        settings = Element("settings")
+        settings.attrib = {"version": "2"}
+        category = Element("category")
+        category.attrib = {"name": "cplex"}
+        settings.append(category)
+
+        for p in self.generate_nondefault_params():
+            name = p.cpx_name.replace("CPX_PARAM_", "").lower()
+            if name == "startalg":
+                name = "rootalg"
+            elif name == "subalg":
+                name = "nodealg"
+            value = str(p.get())
+            if isinstance(p, BoolParameter):
+                if p.get() == 0:
+                    value = "false"
+                else:
+                    value = "true"
+
+            child = Element("setting")
+            child.attrib = {"name": name, "value": value}
+            category.append(child)
+
+        return prettify(settings)
+
     def print_info_to_string(self, overload_params=None, print_defaults=False):
         """  Writes parameters in readable format to a string.
 

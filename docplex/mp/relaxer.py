@@ -266,7 +266,7 @@ class Relaxer(PublishResultAsDf, object):
 
     def __init__(self, prioritizer='all', verbose=False, precision=default_precision,
                  override=False, **kwargs):
-        self.output_table_customizer = kwargs.get('output_processing')  # wml tables, internal
+        self.output_table_customizer = kwargs.get('output_processing')  # docplex_wml tables, internal
         self.output_table_property_name = 'relaxations_output'
         self.default_output_table_name = 'relaxations.csv'
         self.output_table_using_df = True  # if pandas is available of course

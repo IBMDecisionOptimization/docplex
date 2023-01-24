@@ -6,10 +6,9 @@
 
 # gendoc: ignore
 
-from docplex.mp.worker_utils import is_in_docplex_worker, make_new_kpis_dict
 from docplex.mp.publish import auto_publishing_kpis_table_names, \
-    auto_publishing_result_output_names, _KpiRecorder
-from docplex.util.environment import get_environment
+    auto_publishing_result_output_names
+from docplex.util.environment import get_environment, make_new_kpis_dict
 from docplex.mp.context import is_auto_publishing_solve_details
 
 from docplex.mp.publish import write_kpis_table, write_result_output
@@ -63,11 +62,12 @@ class CplexLocalSolveEnv(SolveEnv):
 
         the_env = get_environment()
         auto_publish_details = is_auto_publishing_solve_details(context)
-        if is_in_docplex_worker() and auto_publish_details:
+        if the_env.is_wmlworker and auto_publish_details:
             # do not use lambda here
             def env_kpi_hookfn(kpd):
                 the_env.update_solve_details(kpd)
 
+            from docplex_wml.worker.worker_utils import _KpiRecorder
             mdl.kpi_recorder = _KpiRecorder(mdl,
                                             clock=context.solver.kpi_reporting.filter_level,
                                             publish_hook=env_kpi_hookfn)
@@ -84,23 +84,26 @@ class CplexLocalSolveEnv(SolveEnv):
         # then we update solve details only if they need to be published
         # [[[
         self_stats = mdl.statistics
-        kpis = make_new_kpis_dict(allkpis=mdl._allkpis[:],
-                                  int_vars=self_stats.number_of_integer_variables,
-                                  continuous_vars=self_stats.number_of_continuous_variables,
-                                  linear_constraints=self_stats.number_of_linear_constraints,
-                                  bin_vars=self_stats.number_of_binary_variables,
-                                  quadratic_constraints=self_stats.number_of_quadratic_constraints,
-                                  total_constraints=self_stats.number_of_constraints,
-                                  total_variables=self_stats.number_of_variables)
         # implementation for https://github.ibm.com/IBMDecisionOptimization/dd-planning/issues/2491
         problem_type = mdl._get_cplex_problem_type()
-        kpis['STAT.cplex.modelType'] = problem_type
-        kpis['MODEL_DETAIL_OBJECTIVE_SENSE'] = mdl._objective_sense.verb
+        kpis = make_new_kpis_dict(allkpis=mdl._allkpis[:],
+                                      sense=mdl._objective_sense.verb,
+                                      model_type=problem_type,
+                                      int_vars=self_stats.number_of_integer_variables,
+                                      continuous_vars=self_stats.number_of_continuous_variables,
+                                      linear_constraints=self_stats.number_of_linear_constraints,
+                                      bin_vars=self_stats.number_of_binary_variables,
+                                      quadratic_constraints=self_stats.number_of_quadratic_constraints,
+                                      total_constraints=self_stats.number_of_constraints,
+                                      total_variables=self_stats.number_of_variables)
+        if the_env.is_wmlworker:
+            from docplex_wml.worker.worker_utils import make_cplex_new_kpis_dict
+            new_kpis = make_cplex_new_kpis_dict(mdl)
+            kpis.update(new_kpis)
 
         the_env.notify_start_solve(kpis)
         if auto_publish_details:
             the_env.update_solve_details(kpis)
-        # ]]]
 
         # ---
         #  parameters override if necessary...

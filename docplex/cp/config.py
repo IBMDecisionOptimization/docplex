@@ -198,7 +198,6 @@ Obviously, this performance is won at the cost of the loss of some features that
 Detailed description
 --------------------
 """
-
 from docplex.cp.utils import *
 from docplex.cp.parameters import CpoParameters, ALL_PARAMETER_NAMES
 
@@ -211,8 +210,14 @@ import fnmatch
 
 # Check if running in a worker environment
 try:
-    import docplex.util.environment as runenv
-    IS_IN_WORKER = isinstance(runenv.get_environment(), runenv.WorkerEnvironment)
+    from docplex_wml.version import *
+    #from docplex_wml.worker.environment import WorkerEnvironment
+    #import docplex.util.environment as runenv
+    from docplex_wml import _in_ws_nb
+    if _in_ws_nb is False:
+        IS_IN_WORKER = True
+    else:
+        IS_IN_WORKER = False
 except:
     IS_IN_WORKER = False
 
@@ -471,7 +476,11 @@ context.interactive.daemon_thread = True
 # Apply special changes if running in a worker
 
 if IS_IN_WORKER:
-    context.solver.max_threads = runenv.get_environment().get_available_core_count()
+    try:
+        context.solver.max_threads = int(os.environ["CORE_NUMBERS"])
+    except:
+        context.solver.max_threads = 1
+    #context.solver.max_threads = runenv.get_environment().get_available_core_count()
 
 
 #-----------------------------------------------------------------------------

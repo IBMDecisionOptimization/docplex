@@ -73,7 +73,7 @@ class EnvSolverListener(CpoSolverListener):
             return
 
         # Check if calling environment is DODS (Decision Optimization for Data Science)
-        if self.env.is_dods():
+        if self.env.is_wmlworker:
             # Force solve() method to proceed with search_next sequence
             solver.context.solver.solve_with_search_next = True
         # Check if debug mode is required
@@ -214,6 +214,10 @@ class EnvSolverListener(CpoSolverListener):
                     sdetails["KPI." + k] = v
 
             # Submit details to environment
+            if self.env.is_wmlworker:
+                from docplex_wml.worker.worker_utils import make_cpo_new_kpis_dict
+                new_kpis = make_cpo_new_kpis_dict(mdl, solver)
+                sdetails.update(new_kpis)
             self.publish_context.log(3, "Solve details: ", sdetails)
             self.env.update_solve_details(sdetails)
 

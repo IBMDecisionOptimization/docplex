@@ -402,6 +402,7 @@ def setup_constraints(model):
                              "high_req_min_{0!s}_{1}".format(s, demand_min))
         model.add_constraint(total_assigned <= demand_max,
                              "medium_req_max_{0!s}_{1}".format(s, demand_max))
+        model.add_constraint(total_assigned >= 1, "mandatory_presence_{0!s}".format(s))
 
     for (dept, skill, required) in model.skill_requirements:
         if required > 0:
