@@ -1831,7 +1831,9 @@ class Model(object):
 
     def change_var_types(self, dvars, vartype_args):
         parsefn = self._parse_vartype
-        checked_vars = list(self._checker.typecheck_var_seq(dvars, caller="Model.change_var_types"))
+        candidate_vars = dvars.values() if isinstance(dvars, dict) else dvars
+        checked_vars = list(self._checker.typecheck_var_seq(candidate_vars, caller="Model.change_var_types"))
+
         if is_iterable(vartype_args, accept_string=False):
             new_vartypes = [parsefn(vt_arg) for vt_arg in vartype_args]
         else:
@@ -1840,13 +1842,26 @@ class Model(object):
         self._change_var_types_internal(checked_vars, new_vartypes)
 
     def _change_var_types_internal(self, dvars, new_vartypes):
+        newbounds_dict = {}
+        try:
+            for dv, nvt in zip(dvars, new_vartypes):
+                nlb, nub = self._compute_changed_var_bounds(dv, nvt)
+                newbounds_dict[dv] = nlb, nub
+        except DOcplexException as vtex:
+            # something went wrong in bounds change
+            raise vtex
+
         assert isinstance(dvars, (list, tuple))
         # one batch call to engine
         self.__engine.change_var_types(dvars, new_vartypes)
-        # update bounds, if necessary
+        # update bounds, no error should occur here
         for dv, nvt in zip(dvars, new_vartypes):
             dv._set_vartype_internal(nvt)
-            self._update_var_bounds_from_type(dv, nvt)
+            nlb, nub = newbounds_dict[dv]
+            if nlb != dv.lb:
+                self._set_var_lb(dv, nlb)
+            if nub !=dv.ub:
+                self._set_var_ub(dv, nub)
         self._clear_cached_discrete_var()
 
     def set_var_name(self, dvar, new_name):
@@ -1984,7 +1999,6 @@ class Model(object):
         self.__engine.set_var_ub(var, new_ub)
         var._internal_set_ub(new_ub)
 
-
     def _update_var_bounds_from_type(self, dvar, new_vartype, force_binary01=False):
         # INTERNAL
         old_lb, old_ub = dvar.lb, dvar.ub
@@ -1997,6 +2011,15 @@ class Model(object):
             self._set_var_lb(dvar, new_lb)
         if new_ub != old_ub:
             self._set_var_ub(dvar, new_ub)
+
+    def _compute_changed_var_bounds(self, dvar, new_vartype, force_binary01=False):
+        old_lb, old_ub = dvar.lb, dvar.ub
+        if new_vartype == self.binary_vartype and force_binary01:
+            new_lb, new_ub = 0, 1
+        else:
+            new_lb = new_vartype.resolve_lb(old_lb, logger=self)
+            new_ub = new_vartype.resolve_ub(old_ub, logger=self)
+        return new_lb, new_ub
 
     def get_constraint_by_name(self, name):
         """ Searches for a constraint from a name.
