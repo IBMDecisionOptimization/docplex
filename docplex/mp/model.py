@@ -1829,24 +1829,32 @@ class Model(object):
             self._change_var_types_internal((dvar,), (new_vartype,))
         return dvar
 
-    def change_var_types(self, dvars, vartype_args):
-        parsefn = self._parse_vartype
+    def change_var_types(self, dvars, vartype_args, discard_incompatible_solution=False):
+
         candidate_vars = dvars.values() if isinstance(dvars, dict) else dvars
         checked_vars = list(self._checker.typecheck_var_seq(candidate_vars, caller="Model.change_var_types"))
 
+        parsefn = self._parse_vartype
         if is_iterable(vartype_args, accept_string=False):
             new_vartypes = [parsefn(vt_arg) for vt_arg in vartype_args]
         else:
             new_vartype1 = parsefn(vartype_args)
             new_vartypes = [new_vartype1] * len(checked_vars)
-        self._change_var_types_internal(checked_vars, new_vartypes)
 
-    def _change_var_types_internal(self, dvars, new_vartypes):
+        self._change_var_types_internal(checked_vars, new_vartypes, discard_incompatible_solution)
+
+    def _change_var_types_internal(self, dvars, new_vartypes, discard_incompatible_solution=False):
         newbounds_dict = {}
+        sol = self._solution
+        nb_incompatible_sol_values = 0
         try:
             for dv, nvt in zip(dvars, new_vartypes):
                 nlb, nub = self._compute_changed_var_bounds(dv, nvt)
                 newbounds_dict[dv] = nlb, nub
+                if sol and not nvt.accept_value(sol[dv]):
+                    self.warning("Variable {0} has solution value {1} incompatible with new type {2}",
+                                 dv.name, sol[dv], nvt.short_name)
+                    nb_incompatible_sol_values += 1
         except DOcplexException as vtex:
             # something went wrong in bounds change
             raise vtex
@@ -1863,6 +1871,9 @@ class Model(object):
             if nub !=dv.ub:
                 self._set_var_ub(dv, nub)
         self._clear_cached_discrete_var()
+        if discard_incompatible_solution and nb_incompatible_sol_values:
+            self.warning("Removing current solution")
+            self._clear_solution()
 
     def set_var_name(self, dvar, new_name):
         # INTERNAL: use var.name to set variable names
@@ -5202,6 +5213,10 @@ class Model(object):
         :return:
         """
         self._solution = new_solution
+
+    def _clear_solution(self):
+        self._set_solution(None)
+        # what to do with details....
 
     def _check_has_solution(self):
         # see if we can refine messages here...
