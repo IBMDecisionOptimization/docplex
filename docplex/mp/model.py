@@ -1851,9 +1851,10 @@ class Model(object):
             for dv, nvt in zip(dvars, new_vartypes):
                 nlb, nub = self._compute_changed_var_bounds(dv, nvt)
                 newbounds_dict[dv] = nlb, nub
-                if sol and not nvt.accept_value(sol[dv]):
+                dvv = sol._get_var_value(dv) if sol else 0
+                if sol and not nvt.accept_value(dvv):
                     self.warning("Variable {0} has solution value {1} incompatible with new type {2}",
-                                 dv.name, sol[dv], nvt.short_name)
+                                 dv.name,dvv, nvt.short_name)
                     nb_incompatible_sol_values += 1
         except DOcplexException as vtex:
             # something went wrong in bounds change
