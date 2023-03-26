@@ -1829,8 +1829,17 @@ class Model(object):
             self._change_var_types_internal((dvar,), (new_vartype,))
         return dvar
 
-    def change_var_types(self, dvars, vartype_args, discard_incompatible_solution=False):
+    def change_var_types(self, dvars, vartype_args, discard_incompatible_solution=True):
+        """ Change  type for a collection of variables.
+        :param dvars: an iterable on decision variables.
+        :param vartype_args: either an iterable over variable types, or one single type.
+        :param discard_incompatible_solution: boolean (default is True).
+            If the model has a current solution, and if one of the changed variables
+            has a value in this solution, which is incompatible with the new type, the
+            the solution is discarded. For example, if a continuous variable with value 3.14
+            is changed to binary type, then the solution is discarded
 
+        """
         candidate_vars = dvars.values() if isinstance(dvars, dict) else dvars
         checked_vars = list(self._checker.typecheck_var_seq(candidate_vars, caller="Model.change_var_types"))
 
