@@ -189,6 +189,14 @@ class SOSType(Enum):
     """
     SOS1, SOS2 = 1, 2
 
+    def __new__(cls, size):
+        obj = object.__new__(cls)
+        # predefined
+        obj._value_ = size
+        obj.cpx_sos_type = str(size)
+        return obj
+
+
     def lower(self):
         return self.name.lower()
 
@@ -210,10 +218,6 @@ class SOSType(Enum):
                 return SOSType.SOS2
 
         docplex_fatal("Cannot convert to SOS type: {0!s} - expecting 1|2|'sos1'|'sos2'", arg)
-
-    def _cpx_sos_type(self):
-        # INTERNAL
-        return str(self.value)
 
     @property
     def size(self):

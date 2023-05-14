@@ -6838,7 +6838,10 @@ class Model(object):
         elif nb_vars == sos_type.size:
             self.warning("{0:s} variable is trivial, contains {1} variable(s): all variables set to 1",
                        sos_type.name, sos_type.size)
-        lweights = StaticTypeChecker.typecheck_optional_num_seq(self, weights, accept_none=True, expected_size=nb_vars,
+        if weights is None:
+            lweights = weights
+        else:
+            lweights = StaticTypeChecker.typecheck_optional_num_seq(self, weights, accept_none=True, expected_size=nb_vars,
                                                                 caller='Model.add_sos')
         return self._add_sos(dvars, sos_type, weights=lweights, name=name)
 
