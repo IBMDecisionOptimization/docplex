@@ -1850,7 +1850,8 @@ class Model(object):
             new_vartype1 = parsefn(vartype_args)
             new_vartypes = [new_vartype1] * len(checked_vars)
 
-        self._change_var_types_internal(checked_vars, new_vartypes, discard_incompatible_solution)
+        if checked_vars:
+            self._change_var_types_internal(checked_vars, new_vartypes, discard_incompatible_solution)
 
     def _change_var_types_internal(self, dvars, new_vartypes, discard_incompatible_solution=False):
         newbounds_dict = {}
@@ -1878,7 +1879,7 @@ class Model(object):
             nlb, nub = newbounds_dict[dv]
             if nlb != dv.lb:
                 self._set_var_lb(dv, nlb)
-            if nub !=dv.ub:
+            if nub != dv.ub:
                 self._set_var_ub(dv, nub)
         self._clear_cached_discrete_var()
         if discard_incompatible_solution and nb_incompatible_sol_values:
@@ -2033,13 +2034,23 @@ class Model(object):
         if new_ub != old_ub:
             self._set_var_ub(dvar, new_ub)
 
-    def _compute_changed_var_bounds(self, dvar, new_vartype, force_binary01=False):
+    def _compute_changed_var_bounds(self, dvar, new_vartype):
         old_lb, old_ub = dvar.lb, dvar.ub
-        if new_vartype == self.binary_vartype and force_binary01:
-            new_lb, new_ub = 0, 1
-        else:
-            new_lb = new_vartype.resolve_lb(old_lb, logger=self)
-            new_ub = new_vartype.resolve_ub(old_ub, logger=self)
+        new_lb = new_vartype.resolve_lb(old_lb, logger=self)
+        new_ub = new_vartype.resolve_ub(old_ub, logger=self)
+
+        def is_possible(v_, eps_=1e-6):
+            return new_lb - eps_ <= v_ <= new_ub + eps_
+        if new_vartype == self.binary_vartype:
+            zero_in = is_possible(0)
+            one_in = is_possible(1)
+            if not (zero_in or one_in):
+                raise DOcplexException(f"Variable domain for \"{dvar.name}\" excludes both 0 and 1 - cannot be changed to binary")
+
+        # fail on empty domains
+        if new_ub <= new_lb - 1e-6:
+            raise DOcplexException(f"Variable {dvar.name} has empty updated domain: [{new_lb}, {new_ub}]")
+
         return new_lb, new_ub
 
     def get_constraint_by_name(self, name):
