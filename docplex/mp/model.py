@@ -6826,23 +6826,26 @@ class Model(object):
             The newly added SOS.
         '''
         sos_type = SOSType.parse(sos_arg)
-        msg = 'Model.add_%s() expects an ordered sequence (or iterator) of variables' % sos_type.lower()
+        msg = f"Model.add_%s({sos_type.lower()}) expects an ordered sequence (or iterator) of variables"
         self._checker.check_ordered_sequence(arg=dvars, caller=msg)
         var_seq = self._checker.typecheck_var_seq(dvars, caller="Model.add_sos")
 
         var_list = list(var_seq)  # we need len here.
         nb_vars = len(var_list)
-        if nb_vars < sos_type.size:
-            self.fatal("A {0:s} variable set must contain at least {1:d} variables, got: {2:d}",
-                       sos_type.name, sos_type.size, nb_vars)
-        elif nb_vars == sos_type.size:
-            self.warning("{0:s} variable is trivial, contains {1} variable(s): all variables set to 1",
-                       sos_type.name, sos_type.size)
+        if nb_vars <= sos_type.size:
+            if nb_vars < sos_type.size:
+                self.fatal("A {0:s} variable set must contain at least {1:d} variables, got: {2:d}",
+                           sos_type.name, sos_type.size, nb_vars)
+            else:
+                self.warning("{0:s} variable is trivial, contains {1} variable(s): all variables set to 1",
+                              sos_type.name, sos_type.size)
+
         if weights is None:
             lweights = weights
         else:
-            lweights = StaticTypeChecker.typecheck_optional_num_seq(self, weights, accept_none=True, expected_size=nb_vars,
+            checked_weights = StaticTypeChecker.typecheck_optional_num_seq(self, weights, accept_none=True, expected_size=nb_vars,
                                                                 caller='Model.add_sos')
+            lweights = [float(w) for w in checked_weights]
         return self._add_sos(dvars, sos_type, weights=lweights, name=name)
 
     def _add_sos(self, dvars, sos_type, weights=None, name=None):
