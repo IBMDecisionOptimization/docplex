@@ -1783,16 +1783,37 @@ class CplexEngine(IEngine):
                 self._model.fatal('Annotations require CPLEX 12.7.1 or higher')
 
     def create_sos(self, sos_set):
+        if self.procedural:
+            return self.fast_create_sos(sos_set)
+        else:
+            # non procedural, slower
+            cpx_sos_type = sos_set.sos_type._cpx_sos_type()
+            indices = [dv.index for dv in sos_set.iter_variables()]
+            weights = sos_set.weights
+            # do NOT pass None to cplex/swig here --> crash
+            cpx_sos_name = sos_set.safe_name
+            # call cplex...
+            sos_index = self._cplex.SOS.add(type=cpx_sos_type,
+                                            SOS=self.cpx_adapter.cplex_module.SparsePair(ind=indices, val=weights),
+                                            name=cpx_sos_name)
+            return sos_index
+
+    def fast_create_sos(self, sos_set):
+        # procedural version
+        cpx = self._cplex
         cpx_sos_type = sos_set.sos_type._cpx_sos_type()
-        indices = [dv.index for dv in sos_set.iter_variables()]
+        indices = [dv.safe_index for dv in sos_set.iter_variables()]
         weights = sos_set.weights
         # do NOT pass None to cplex/swig here --> crash
         cpx_sos_name = sos_set.safe_name
-        # call cplex...
-        sos_index = self._cplex.SOS.add(type=cpx_sos_type,
-                                        SOS=self.cpx_adapter.cplex_module.SparsePair(ind=indices, val=weights),
-                                        name=cpx_sos_name)
-        return sos_index
+        numsos = self._model.number_of_sos
+        self.cpx_adapter.addsos(cpx._env._e,
+                                cpx._lp, cpx_sos_type,
+                                [0],
+                                indices,
+                                weights,
+                                [cpx_sos_name])
+        return numsos
 
     def clear_all_sos(self):
         self._cplex.SOS.delete()

@@ -16,6 +16,8 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
         and :func:`docplex.mp.model.Model.add_sos2` methods in Model.
     '''
 
+    __slots__ = ('_sos_type', '_variables', '_weights')
+
     def __init__(self, model, variable_sequence, sos_type, weights=None, name=None):
         IndexableObject.__init__(self, model, name)
         self._sos_type = sos_type
