@@ -1802,11 +1802,13 @@ class CplexEngine(IEngine):
         # procedural version
         cpx = self._cplex
         cpx_sos_type = sos_set.sos_type.cpx_sos_type
+        # sadly pycplex won't accept a tyuple here
         indices = [dv._index for dv in sos_set.iter_variables()]
         weights = sos_set.weights
         # do NOT pass None to cplex/swig here --> crash
         cpx_sos_name = sos_set.safe_name
         numsos = self._model.number_of_sos
+        # sadly pycplex won't accept  tuples here
         self.cpx_adapter.addsos(cpx._env._e,
                                 cpx._lp, cpx_sos_type,
                                 [0],

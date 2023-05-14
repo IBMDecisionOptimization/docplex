@@ -22,6 +22,7 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
         IndexableObject.__init__(self, model, name)
         self._sos_type = sos_type
         self._variables = variable_sequence[:]  # copy sequence
+        self._weights = None
         self._set_weights(weights)
 
     def _set_weights(self, new_weights):
@@ -107,7 +108,6 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
         lhs = mdl.sum_vars(self._variables)
         rhs = lfactory.constant_expr(self.sos_type.value)
         return lfactory.new_binary_constraint(lhs, "le", rhs, name=self.name)
-
 
     def __str__(self):
         ''' Redefine the standard __str__ method of Python objects to customize string conversion.
