@@ -1802,7 +1802,7 @@ class CplexEngine(IEngine):
         # procedural version
         cpx = self._cplex
         cpx_sos_type = sos_set.sos_type._cpx_sos_type()
-        indices = [dv.safe_index for dv in sos_set.iter_variables()]
+        indices = [dv._index for dv in sos_set.iter_variables()]
         weights = sos_set.weights
         # do NOT pass None to cplex/swig here --> crash
         cpx_sos_name = sos_set.safe_name
