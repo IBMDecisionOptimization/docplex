@@ -18,6 +18,15 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
 
     __slots__ = ('_sos_type', '_variables', '_weights')
 
+    _default_weights_dir = {}
+
+    @classmethod
+    def _get_default_weights(cls, size):
+        if size not in cls._default_weights_dir:
+            def_weights = [1+i for i in range(size)]
+            cls._default_weights_dir[size] = def_weights
+        return cls._default_weights_dir[size]
+
     def __init__(self, model, variable_sequence, sos_type, weights=None, name=None):
         IndexableObject.__init__(self, model, name)
         self._sos_type = sos_type
@@ -69,6 +78,10 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
         '''
         return len(self._variables)
 
+    @property
+    def size(self):
+        return len(self._variables)
+
     def __getitem__(self, item):
         ''' This special method enables the [] operator on special ordered sets,
 
@@ -96,7 +109,7 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
     @property
     def weights(self):
         self_weights = self._weights
-        return self_weights if self_weights is not None else list(range(1, len(self) + 1))
+        return self_weights if self_weights is not None else self._get_default_weights(self.size)
 
     @weights.setter
     def weights(self, new_weights):
@@ -104,7 +117,7 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
 
     def as_constraint(self):
         mdl = self._model
-        lfactory = mdl._lfactory
+        lfactory = mdl.lfactory
         lhs = mdl.sum_vars(self._variables)
         rhs = lfactory.constant_expr(self.sos_type.value)
         return lfactory.new_binary_constraint(lhs, "le", rhs, name=self.name)
