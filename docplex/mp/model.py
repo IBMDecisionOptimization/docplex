@@ -6826,8 +6826,8 @@ class Model(object):
             The newly added SOS.
         '''
         sos_type = SOSType.parse(sos_arg)
-        msg = f"Model.add_sos{sos_type.value} expects an ordered sequence (or iterator) of variables"
-        self._checker.check_ordered_sequence(arg=dvars, caller=msg)
+        msgfn = lambda: f"Model.add_sos{sos_type.value} expects an ordered sequence (or iterator) of variables"
+        self._checker.check_ordered_sequence(arg=dvars, caller=msgfn)
         var_seq = self._checker.typecheck_var_seq(dvars, caller="Model.add_sos")
 
         var_list = list(var_seq)  # we need len here.
