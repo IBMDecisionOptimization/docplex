@@ -196,10 +196,6 @@ class SOSType(Enum):
         obj.cpx_sos_type = str(size)
         return obj
 
-
-    def lower(self):
-        return self.name.lower()
-
     @staticmethod
     def parse(arg,
               sos1_tokens=frozenset(['1', 'sos1']),
