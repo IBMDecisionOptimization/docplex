@@ -18,15 +18,6 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
 
     __slots__ = ('_sos_type', '_variables', '_weights')
 
-    _default_weights_dir = {}
-
-    @classmethod
-    def _get_default_weights(cls, size):
-        if size not in cls._default_weights_dir:
-            def_weights = [1+i for i in range(size)]
-            cls._default_weights_dir[size] = def_weights
-        return cls._default_weights_dir[size]
-
     def __init__(self, model, variable_sequence, sos_type, weights=None, name=None):
         IndexableObject.__init__(self, model, name)
         self._sos_type = sos_type
@@ -109,7 +100,7 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
     @property
     def weights(self):
         self_weights = self._weights
-        return self_weights if self_weights is not None else self._get_default_weights(self.size)
+        return self_weights if self_weights is not None else self._model._get_cached_sos_weights(self.size)
 
     @weights.setter
     def weights(self, new_weights):

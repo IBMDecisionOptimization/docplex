@@ -516,6 +516,13 @@ class Model(object):
                 print("* Error in model_build_hook: {0!s}".format(me))
 
         self._ctstatus_counter = 0
+        self._cached_sos_weights = {}
+
+    def _get_cached_sos_weights(self, size):
+        sos_weight_cache = self._cached_sos_weights
+        if size not in sos_weight_cache:
+            sos_weight_cache[size] = [(i+1) for i in range(size)]
+        return sos_weight_cache[size]
 
     def _new_ct_status_index(self):
         # INTERNAL
