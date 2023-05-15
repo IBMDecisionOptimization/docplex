@@ -545,7 +545,7 @@ class StandardTypeChecker(DOcplexLoggerTypeChecker):
         # but may do unexpected things
         s_caller = resolve_caller_as_string(caller)
         if not(is_ordered_sequence(arg) or (accept_iterator and is_iterator(arg))):
-            self.fatal("{0}, got: {1!s}", s_caller, type(arg).__name__)
+            self.fatal("{0}expects ordered sequence of variables, got: {1!s}", s_caller, type(arg).__name__)
 
     def check_solution_hook(self, mdl, sol_hook_fn):
         if not callable(sol_hook_fn):
