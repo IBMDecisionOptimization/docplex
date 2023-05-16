@@ -118,7 +118,7 @@ class _FunctionalExpr(Expr, LinearOperand):
     def _ensure_resolved(self):
         if self._f_var is None:
             # 1. create the var (once!)
-            self._f_var = self._create_functional_var()
+            self._f_var = self._create_functional_var(named=self._model._name_pwl_vars)
             # 2. post the link between the fvar and the argument expr
         if not self._resolved:
             self._resolve()
@@ -221,6 +221,9 @@ class _FunctionalExpr(Expr, LinearOperand):
 
 # noinspection PyAbstractClass
 class UnaryFunctionalExpr(_FunctionalExpr):
+
+    __slots__ = ('_argument_expr', '_x_var_')
+
     def __init__(self, model, argument_expr):
         super().__init__(model)
         self._argument_expr = model._lfactory._to_linear_operand(argument_expr)

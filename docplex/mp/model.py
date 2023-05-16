@@ -403,6 +403,10 @@ class Model(object):
         # expression ordering
         self._keep_ordering = False
 
+
+        # pwl aux var named
+        self._name_pwl_vars = False
+
         # -- float formats
         self._float_precision = 3
         self._float_meta_format = '{%d:.3f}'
