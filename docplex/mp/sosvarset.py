@@ -36,6 +36,21 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
             if len(weight_list) != nb_vars:
                 self._model.fatal("Expecting {0} SOS weights, a list with size {1} was passed",
                                   nb_vars, len(weight_list))
+            # check weights are unique
+
+            def _find_duplicate(wlist_):
+                wset_ = set()
+                for w in wlist_:
+                    if w in wset_:
+                        return w
+                    else:
+                        wset_.add(w)
+                return None
+            setof_weights = set(weight_list)
+            if len(setof_weights) != nb_vars:
+                dupw = _find_duplicate(weight_list)
+                self._model.fatal("SOS weights must be unique, duplicate weight: {}", dupw)
+
             self._weights = weight_list[:]
 
     @property
@@ -99,12 +114,15 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
 
     @property
     def weights(self):
+        return self.get_cplex_weights()
+
+    # @weights.setter
+    # def weights(self, new_weights):
+    #     self._set_weights(new_weights)
+
+    def get_cplex_weights(self):
         self_weights = self._weights
         return self_weights if self_weights is not None else self._model._get_cached_sos_weights(self.size)
-
-    @weights.setter
-    def weights(self, new_weights):
-        self._set_weights(new_weights)
 
     def as_constraint(self):
         mdl = self._model

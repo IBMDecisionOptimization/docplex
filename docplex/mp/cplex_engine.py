@@ -1804,7 +1804,7 @@ class CplexEngine(IEngine):
         cpx_sos_type = sos_set.sos_type.cpx_sos_type
         # sadly pycplex won't accept a tyuple here
         indices = [dv._index for dv in sos_set.iter_variables()]
-        weights = sos_set.weights
+        weights = sos_set.get_cplex_weights()
         # do NOT pass None to cplex/swig here --> crash
         cpx_sos_name = sos_set.safe_name
         numsos = self._model.number_of_sos
