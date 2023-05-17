@@ -34,7 +34,6 @@ class PwlFunction(ModelingObjectBase):
     def check_number(logger, arg, caller=None):
         StaticTypeChecker.typecheck_num_nan_inf(logger, arg, caller)
 
-
     @staticmethod
     def check_list_pair_breaksxy(logger, arg):
         if not is_iterable(arg):
@@ -43,7 +42,7 @@ class PwlFunction(ModelingObjectBase):
             # Encapsulate tuple argument into a list: this allows defining a PWL with a tuple if there is only
             #  one element in its definition
             arg = [arg]
-        if len(arg) == 0:
+        if not arg:
             logger.fatal("argument 'breaksxy' must be a non-empty list of (x, y) tuples.")
         prev_pair = None
         pprev_pair = None
@@ -129,6 +128,7 @@ class PwlFunction(ModelingObjectBase):
             self._preslope = preslope
             self._breaksxy = self._reformulate_breaksxy(breaksxy)
             self._postslope = postslope
+            self._cpx_breaks = None
 
         @property
         def preslope(self):
@@ -141,6 +141,15 @@ class PwlFunction(ModelingObjectBase):
         @property
         def postslope(self):
             return self._postslope
+
+        @property
+        def cpx_breaksxy(self):
+            if self._cpx_breaks is None:
+                cpx_breaksx = [float(bkx) for bkx, _ in self._breaksxy]
+                cpx_breaksy = [float(bky) for _, bky in self._breaksxy]
+                self._cpx_breaks = cpx_breaksx, cpx_breaksy
+            assert self._cpx_breaks is not None
+            return self._cpx_breaks
 
         def deepcopy(self):
             breaksxy_copy = copy.deepcopy(self.breaksxy)
@@ -273,6 +282,10 @@ class PwlFunction(ModelingObjectBase):
                     nb_discontinuities += 1
                 prev_br = br
             return len(self.breaksxy) - nb_discontinuities - 1
+
+        @property
+        def number_of_breaks(self):
+            return len(self._breaksxy)
 
         def __add__(self, arg):
             if isinstance(arg, PwlFunction._PwlAsBreaks):
@@ -609,6 +622,15 @@ class PwlFunction(ModelingObjectBase):
     def pwl_def_as_breaks(self):
         return self._pwl_def_as_breaks
 
+    @property
+    def number_of_breaks(self):
+        return self._pwl_def_as_breaks.number_of_breaks
+
+    def _cplex_breaks(self):
+        # INTERNAL, use by cplex only
+        pwl_def = self._pwl_def_as_breaks
+        return pwl_def.cpx_breaksxy
+
     # __call__ builds an expression equal to the piecewise linear value of its argument, based
     # on the definition of the PWL function.
     #
@@ -622,8 +644,9 @@ class PwlFunction(ModelingObjectBase):
     # Note:
     #     Building the expression generates one auxiliary decision variable.
     def __call__(self, e):
-        self.model._checker.typecheck_operand(e, caller="Model.pwl", accept_numbers=True)
-        return self.model._add_pwl_expr(self, e)
+        m = self._model
+        m._checker.typecheck_operand(e, caller="Model.pwl", accept_numbers=True)
+        return m._add_pwl_expr(self, e)
 
     def __hash__(self):
         return id(self)

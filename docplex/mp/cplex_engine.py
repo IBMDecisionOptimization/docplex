@@ -1154,10 +1154,9 @@ class CplexEngine(IEngine):
             pwlctname = pwl_ct.safe_name
             x_var = pwl_ct.expr
             f_var = pwl_ct.y
-            cpx_breaksx = [float(breakx) for breakx, _ in pwl_def.breaksxy]
-            cpx_breaksy = [float(breaky) for _, breaky in pwl_def.breaksxy]
-            n_breaks = len(cpx_breaksx)
-            assert n_breaks == len(cpx_breaksy)
+            cpx_breaksx, cpx_breaksy = pwl_func._cplex_breaks()
+
+
             if self.procedural:
                 ret_add = self._fast_add_piecewise_constraint(f_var._index, x_var._index,
                                                               float(pwl_def.preslope),
