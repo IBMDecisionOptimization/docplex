@@ -314,6 +314,8 @@ class Model(object):
             elif arg_name == 'cts_by_name':
                 # safe
                 pass
+            elif arg_name == "name_functional_vars":
+                self._name_functional_vars = bool(arg_val)
             else:
                 self.warning("keyword argument: {0:s}={1!s} - is not recognized (ignored)", arg_name, arg_val)
 
@@ -405,7 +407,7 @@ class Model(object):
 
 
         # pwl aux var named
-        self._name_pwl_vars = False
+        self._name_functional_vars = False
 
         # -- float formats
         self._float_precision = 3

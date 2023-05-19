@@ -118,7 +118,7 @@ class _FunctionalExpr(Expr, LinearOperand):
     def _ensure_resolved(self):
         if self._f_var is None:
             # 1. create the var (once!)
-            self._f_var = self._create_functional_var(named=self._model._name_pwl_vars)
+            self._f_var = self._create_functional_var(named=self._model._name_functional_vars)
             # 2. post the link between the fvar and the argument expr
         if not self._resolved:
             self._resolve()
