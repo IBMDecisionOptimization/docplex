@@ -1150,23 +1150,20 @@ class CplexEngine(IEngine):
         try:
 
             pwl_func = pwl_ct.pwl_func
-            pwl_def = pwl_func.pwl_def_as_breaks
             pwlctname = pwl_ct.safe_name
             x_var = pwl_ct.expr
             f_var = pwl_ct.y
-            cpx_breaksx, cpx_breaksy = pwl_func._cplex_breaks()
-
+            cpx_breaksx, cpx_breaksy, fpreslope, fpostslope = pwl_func._cplex_breaks()
 
             if self.procedural:
                 ret_add = self._fast_add_piecewise_constraint(f_var._index, x_var._index,
-                                                              float(pwl_def.preslope),
+                                                              fpreslope,
                                                               cpx_breaksx, cpx_breaksy,
-                                                              float(pwl_def.postslope),
+                                                              fpostslope,
                                                               name=pwlctname)
             else:
                 ret_add = self._cplex.pwl_constraints.add(f_var._index, x_var._index,
-                                                          float(pwl_def.preslope),
-                                                          float(pwl_def.postslope),
+                                                          fpreslope, fpostslope,
                                                           cpx_breaksx, cpx_breaksy,
                                                           name=pwlctname)
 

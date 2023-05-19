@@ -147,7 +147,7 @@ class PwlFunction(ModelingObjectBase):
             if self._cpx_breaks is None:
                 cpx_breaksx = [float(bkx) for bkx, _ in self._breaksxy]
                 cpx_breaksy = [float(bky) for _, bky in self._breaksxy]
-                self._cpx_breaks = cpx_breaksx, cpx_breaksy
+                self._cpx_breaks = cpx_breaksx, cpx_breaksy, float(self._preslope), float(self._postslope)
             assert self._cpx_breaks is not None
             return self._cpx_breaks
 
@@ -632,7 +632,7 @@ class PwlFunction(ModelingObjectBase):
     def _cplex_breaks(self):
         # INTERNAL, use by cplex only
         pwl_def = self._pwl_def_as_breaks
-        return pwl_def.cpx_breaksxy
+        return pwl_defcpx_breaksxy
 
     # __call__ builds an expression equal to the piecewise linear value of its argument, based
     # on the definition of the PWL function.
