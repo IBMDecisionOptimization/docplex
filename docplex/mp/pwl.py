@@ -618,6 +618,9 @@ class PwlFunction(ModelingObjectBase):
     def pwl_def(self):
         return self._pwl_def
 
+    def iter_breaksxy(self):
+        return iter(self._pwl_def_as_breaks._breaksxy)
+
     @property
     def pwl_def_as_breaks(self):
         return self._pwl_def_as_breaks
