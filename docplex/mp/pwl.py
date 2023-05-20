@@ -632,7 +632,7 @@ class PwlFunction(ModelingObjectBase):
     def _cplex_breaks(self):
         # INTERNAL, use by cplex only
         pwl_def = self._pwl_def_as_breaks
-        return pwl_defcpx_breaksxy
+        return pwl_def.cpx_breaksxy
 
     # __call__ builds an expression equal to the piecewise linear value of its argument, based
     # on the definition of the PWL function.
