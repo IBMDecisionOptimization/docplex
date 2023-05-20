@@ -124,6 +124,9 @@ class _FunctionalExpr(Expr, LinearOperand):
             self._resolve()
             self._resolved = True
 
+    def mark_resolved(self):
+        self._resolved = True
+
     def _is_resolved(self):
         return self._resolved and self._f_var is not None
 
@@ -630,6 +633,8 @@ class LogicalOrExpr(_LogicalSequenceExpr):
 
 
 class PwlExpr(UnaryFunctionalExpr):
+
+    __slots__ = ['_pwl_func', '_f_var' ]
 
     def __init__(self, model,
                  pwl_func, argument_expr,
