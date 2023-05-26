@@ -516,6 +516,13 @@ class Model(object):
                 print("* Error in model_build_hook: {0!s}".format(me))
 
         self._ctstatus_counter = 0
+        self._cached_sos_weights = {}
+
+    def _get_cached_sos_weights(self, size):
+        sos_weight_cache = self._cached_sos_weights
+        if size not in sos_weight_cache:
+            sos_weight_cache[size] = [(i+1) for i in range(size)]
+        return sos_weight_cache[size]
 
     def _new_ct_status_index(self):
         # INTERNAL
@@ -1829,25 +1836,62 @@ class Model(object):
             self._change_var_types_internal((dvar,), (new_vartype,))
         return dvar
 
-    def change_var_types(self, dvars, vartype_args):
+    def change_var_types(self, dvars, vartype_args, discard_incompatible_solution=True):
+        """ Change  type for a collection of variables.
+        :param dvars: an iterable on decision variables.
+        :param vartype_args: either an iterable over variable types, or one single type.
+        :param discard_incompatible_solution: boolean (default is True).
+            If the model has a current solution, and if one of the changed variables
+            has a value in this solution, which is incompatible with the new type, the
+            the solution is discarded. For example, if a continuous variable with value 3.14
+            is changed to binary type, then the solution is discarded
+
+        """
+        candidate_vars = dvars.values() if isinstance(dvars, dict) else dvars
+        checked_vars = list(self._checker.typecheck_var_seq(candidate_vars, caller="Model.change_var_types"))
+
         parsefn = self._parse_vartype
-        checked_vars = list(self._checker.typecheck_var_seq(dvars, caller="Model.change_var_types"))
         if is_iterable(vartype_args, accept_string=False):
             new_vartypes = [parsefn(vt_arg) for vt_arg in vartype_args]
         else:
             new_vartype1 = parsefn(vartype_args)
             new_vartypes = [new_vartype1] * len(checked_vars)
-        self._change_var_types_internal(checked_vars, new_vartypes)
 
-    def _change_var_types_internal(self, dvars, new_vartypes):
+        if checked_vars:
+            self._change_var_types_internal(checked_vars, new_vartypes, discard_incompatible_solution)
+
+    def _change_var_types_internal(self, dvars, new_vartypes, discard_incompatible_solution=False):
+        newbounds_dict = {}
+        sol = self._solution
+        nb_incompatible_sol_values = 0
+        try:
+            for dv, nvt in zip(dvars, new_vartypes):
+                nlb, nub = self._compute_changed_var_bounds(dv, nvt)
+                newbounds_dict[dv] = nlb, nub
+                dvv = sol._get_var_value(dv) if sol else 0
+                if sol and not nvt.accept_value(dvv):
+                    self.warning("Variable {0} has solution value {1} incompatible with new type {2}",
+                                 dv.name,dvv, nvt.short_name)
+                    nb_incompatible_sol_values += 1
+        except DOcplexException as vtex:
+            # something went wrong in bounds change
+            raise vtex
+
         assert isinstance(dvars, (list, tuple))
         # one batch call to engine
         self.__engine.change_var_types(dvars, new_vartypes)
-        # update bounds, if necessary
+        # update bounds, no error should occur here
         for dv, nvt in zip(dvars, new_vartypes):
             dv._set_vartype_internal(nvt)
-            self._update_var_bounds_from_type(dv, nvt)
+            nlb, nub = newbounds_dict[dv]
+            if nlb != dv.lb:
+                self._set_var_lb(dv, nlb)
+            if nub != dv.ub:
+                self._set_var_ub(dv, nub)
         self._clear_cached_discrete_var()
+        if discard_incompatible_solution and nb_incompatible_sol_values:
+            self.warning("Removing current solution")
+            self._clear_solution()
 
     def set_var_name(self, dvar, new_name):
         # INTERNAL: use var.name to set variable names
@@ -1984,7 +2028,6 @@ class Model(object):
         self.__engine.set_var_ub(var, new_ub)
         var._internal_set_ub(new_ub)
 
-
     def _update_var_bounds_from_type(self, dvar, new_vartype, force_binary01=False):
         # INTERNAL
         old_lb, old_ub = dvar.lb, dvar.ub
@@ -1997,6 +2040,25 @@ class Model(object):
             self._set_var_lb(dvar, new_lb)
         if new_ub != old_ub:
             self._set_var_ub(dvar, new_ub)
+
+    def _compute_changed_var_bounds(self, dvar, new_vartype):
+        old_lb, old_ub = dvar.lb, dvar.ub
+        new_lb = new_vartype.resolve_lb(old_lb, logger=self)
+        new_ub = new_vartype.resolve_ub(old_ub, logger=self)
+
+        def is_possible(v_, eps_=1e-6):
+            return new_lb - eps_ <= v_ <= new_ub + eps_
+        if new_vartype == self.binary_vartype:
+            zero_in = is_possible(0)
+            one_in = is_possible(1)
+            if not (zero_in or one_in):
+                raise DOcplexException(f"Variable domain for \"{dvar.name}\" excludes both 0 and 1 - cannot be changed to binary")
+
+        # fail on empty domains
+        if new_ub <= new_lb - 1e-6:
+            raise DOcplexException(f"Variable {dvar.name} has empty updated domain: [{new_lb}, {new_ub}]")
+
+        return new_lb, new_ub
 
     def get_constraint_by_name(self, name):
         """ Searches for a constraint from a name.
@@ -5180,6 +5242,10 @@ class Model(object):
         """
         self._solution = new_solution
 
+    def _clear_solution(self):
+        self._set_solution(None)
+        # what to do with details....
+
     def _check_has_solution(self):
         # see if we can refine messages here...
         if self._solution is None:
@@ -6767,20 +6833,26 @@ class Model(object):
             The newly added SOS.
         '''
         sos_type = SOSType.parse(sos_arg)
-        msg = 'Model.add_%s() expects an ordered sequence (or iterator) of variables' % sos_type.lower()
-        self._checker.check_ordered_sequence(arg=dvars, caller=msg)
+        msgfn = lambda: f"Model.add_sos{sos_type.value} expects an ordered sequence (or iterator) of variables"
+        self._checker.check_ordered_sequence(arg=dvars, caller=msgfn)
         var_seq = self._checker.typecheck_var_seq(dvars, caller="Model.add_sos")
 
         var_list = list(var_seq)  # we need len here.
         nb_vars = len(var_list)
-        if nb_vars < sos_type.size:
-            self.fatal("A {0:s} variable set must contain at least {1:d} variables, got: {2:d}",
-                       sos_type.name, sos_type.size, nb_vars)
-        elif nb_vars == sos_type.size:
-            self.warning("{0:s} variable is trivial, contains {1} variable(s): all variables set to 1",
-                       sos_type.name, sos_type.size)
-        lweights = StaticTypeChecker.typecheck_optional_num_seq(self, weights, accept_none=True, expected_size=nb_vars,
+        if nb_vars <= sos_type.size:
+            if nb_vars < sos_type.size:
+                self.fatal("A {0:s} variable set must contain at least {1:d} variables, got: {2:d}",
+                           sos_type.name, sos_type.size, nb_vars)
+            else:
+                self.warning("{0:s} variable is trivial, contains {1} variable(s): all variables set to 1",
+                              sos_type.name, sos_type.size)
+
+        if weights is None:
+            lweights = weights
+        else:
+            checked_weights = StaticTypeChecker.typecheck_optional_num_seq(self, weights, accept_none=True, expected_size=nb_vars,
                                                                 caller='Model.add_sos')
+            lweights = [float(w) for w in checked_weights]
         return self._add_sos(dvars, sos_type, weights=lweights, name=name)
 
     def _add_sos(self, dvars, sos_type, weights=None, name=None):

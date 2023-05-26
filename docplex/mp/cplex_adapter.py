@@ -93,6 +93,7 @@ class CplexAdapter(object):
         self.getlb = cpxproc.getlb
         self.getub = cpxproc.getub
         self.getsense = cpxproc.getsense
+        self.addsos = cpxproc.addsos
 
         # allocators
         try:
