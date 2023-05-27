@@ -246,7 +246,7 @@ class UnaryFunctionalExpr(_FunctionalExpr):
         return self._argument_expr.is_discrete()
 
     def to_string(self, nb_digits=None, use_space=False):
-        s_arg = self._argument_expr.to_string(nb_digits, use_space)
+        s_arg = self._argument_expr.to_string()
         return "{0:s}({1!s})".format(self.function_symbol, s_arg)
 
     def copy(self, target_model, memo):

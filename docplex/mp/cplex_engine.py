@@ -1172,6 +1172,23 @@ class CplexEngine(IEngine):
         except AttributeError:  # pragma: no cover
             self._model.fatal("Please update Cplex to version 12.7+ to benefit from Piecewise Linear constraints.")
 
+    def create_batch_pwl_constraints(self, pwl_func, arg_vars, y_vars):
+        nb_vars = len(arg_vars)
+        assert nb_vars == len(y_vars)
+        self._resync_if_needed
+        cpx_breaksx, cpx_breaksy, fpreslope, fpostslope = pwl_func._cplex_breaks()
+        first = -1
+        for v in range(nb_vars):
+            x_var = arg_vars[v]
+            y_var = y_vars[v]
+            ret_add = self._fast_add_piecewise_constraint(y_var._index, x_var._index,
+                                                          fpreslope,
+                                                          cpx_breaksx, cpx_breaksy,
+                                                          fpostslope, name='')
+            if first < 0:
+                first = ret_add
+        return range(first, first + nb_vars)
+
     def remove_constraint(self, ct):
         self._resync_if_needed()
         doomed_index = ct.safe_index

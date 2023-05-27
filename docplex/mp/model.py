@@ -5123,9 +5123,9 @@ class Model(object):
                     # pass_param.print_information()
                     m.context.update_cplex_parameters(pass_param)
                     m.context.cplex_parameters.print_information()
-                # ---
-                if current_sol and pass_count > 1:
-                    solve_kwargs['lex_mipstart'] = current_sol
+                # --- TODO: why is this here?
+                # if current_sol and pass_count > 1:
+                #     solve_kwargs['lex_mipstart'] = current_sol
 
                 current_sol = m.solve(**solve_kwargs)
                 # restore params if need be
