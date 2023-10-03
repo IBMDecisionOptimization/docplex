@@ -118,11 +118,14 @@ class _FunctionalExpr(Expr, LinearOperand):
     def _ensure_resolved(self):
         if self._f_var is None:
             # 1. create the var (once!)
-            self._f_var = self._create_functional_var()
+            self._f_var = self._create_functional_var(named=self._model._name_functional_vars)
             # 2. post the link between the fvar and the argument expr
         if not self._resolved:
             self._resolve()
             self._resolved = True
+
+    def mark_resolved(self):
+        self._resolved = True
 
     def _is_resolved(self):
         return self._resolved and self._f_var is not None
@@ -221,6 +224,9 @@ class _FunctionalExpr(Expr, LinearOperand):
 
 # noinspection PyAbstractClass
 class UnaryFunctionalExpr(_FunctionalExpr):
+
+    __slots__ = ('_argument_expr', '_x_var_')
+
     def __init__(self, model, argument_expr):
         super().__init__(model)
         self._argument_expr = model._lfactory._to_linear_operand(argument_expr)
@@ -240,7 +246,7 @@ class UnaryFunctionalExpr(_FunctionalExpr):
         return self._argument_expr.is_discrete()
 
     def to_string(self, nb_digits=None, use_space=False):
-        s_arg = self._argument_expr.to_string(nb_digits, use_space)
+        s_arg = self._argument_expr.to_string()
         return "{0:s}({1!s})".format(self.function_symbol, s_arg)
 
     def copy(self, target_model, memo):
@@ -627,6 +633,8 @@ class LogicalOrExpr(_LogicalSequenceExpr):
 
 
 class PwlExpr(UnaryFunctionalExpr):
+
+    __slots__ = ['_pwl_func', '_f_var' ]
 
     def __init__(self, model,
                  pwl_func, argument_expr,
