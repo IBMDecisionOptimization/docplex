@@ -531,7 +531,7 @@ class SolveSolution(object):
         """
         checker = self._checker
         checker.check_ordered_sequence(arg=dvars,
-                                       caller='SolveSolution.get_values() expects ordered sequence of variables')
+                                       caller='SolveSolution.get_values()')
         dvar_seq = checker.typecheck_var_seq(dvars)
         return self._get_values(dvar_seq)
 

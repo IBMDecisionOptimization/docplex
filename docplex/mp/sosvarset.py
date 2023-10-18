@@ -16,10 +16,13 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
         and :func:`docplex.mp.model.Model.add_sos2` methods in Model.
     '''
 
+    __slots__ = ('_sos_type', '_variables', '_weights')
+
     def __init__(self, model, variable_sequence, sos_type, weights=None, name=None):
         IndexableObject.__init__(self, model, name)
         self._sos_type = sos_type
         self._variables = variable_sequence[:]  # copy sequence
+        self._weights = None
         self._set_weights(weights)
 
     def _set_weights(self, new_weights):
@@ -33,6 +36,21 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
             if len(weight_list) != nb_vars:
                 self._model.fatal("Expecting {0} SOS weights, a list with size {1} was passed",
                                   nb_vars, len(weight_list))
+            # check weights are unique
+
+            def _find_duplicate(wlist_):
+                wset_ = set()
+                for w in wlist_:
+                    if w in wset_:
+                        return w
+                    else:
+                        wset_.add(w)
+                return None
+            setof_weights = set(weight_list)
+            if len(setof_weights) != nb_vars:
+                dupw = _find_duplicate(weight_list)
+                self._model.fatal("SOS weights must be unique, duplicate weight: {}", dupw)
+
             self._weights = weight_list[:]
 
     @property
@@ -66,6 +84,10 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
         '''
         return len(self._variables)
 
+    @property
+    def size(self):
+        return len(self._variables)
+
     def __getitem__(self, item):
         ''' This special method enables the [] operator on special ordered sets,
 
@@ -92,20 +114,22 @@ class SOSVariableSet(IndexableObject, _AbstractBendersAnnotated):
 
     @property
     def weights(self):
-        self_weights = self._weights
-        return self_weights if self_weights is not None else list(range(1, len(self) + 1))
+        return self.get_cplex_weights()
 
-    @weights.setter
-    def weights(self, new_weights):
-        self._set_weights(new_weights)
+    # @weights.setter
+    # def weights(self, new_weights):
+    #     self._set_weights(new_weights)
+
+    def get_cplex_weights(self):
+        self_weights = self._weights
+        return self_weights if self_weights is not None else self._model._get_cached_sos_weights(self.size)
 
     def as_constraint(self):
         mdl = self._model
-        lfactory = mdl._lfactory
+        lfactory = mdl.lfactory
         lhs = mdl.sum_vars(self._variables)
         rhs = lfactory.constant_expr(self.sos_type.value)
         return lfactory.new_binary_constraint(lhs, "le", rhs, name=self.name)
-
 
     def __str__(self):
         ''' Redefine the standard __str__ method of Python objects to customize string conversion.
