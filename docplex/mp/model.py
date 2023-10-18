@@ -314,6 +314,8 @@ class Model(object):
             elif arg_name == 'cts_by_name':
                 # safe
                 pass
+            elif arg_name == "name_functional_vars":
+                self._name_functional_vars = bool(arg_val)
             else:
                 self.warning("keyword argument: {0:s}={1!s} - is not recognized (ignored)", arg_name, arg_val)
 
@@ -402,6 +404,10 @@ class Model(object):
 
         # expression ordering
         self._keep_ordering = False
+
+
+        # pwl aux var named
+        self._name_functional_vars = False
 
         # -- float formats
         self._float_precision = 3
@@ -5179,9 +5185,9 @@ class Model(object):
                     # pass_param.print_information()
                     m.context.update_cplex_parameters(pass_param)
                     m.context.cplex_parameters.print_information()
-                # ---
-                if current_sol and pass_count > 1:
-                    solve_kwargs['lex_mipstart'] = current_sol
+                # --- TODO: why is this here?
+                # if current_sol and pass_count > 1:
+                #     solve_kwargs['lex_mipstart'] = current_sol
 
                 current_sol = m.solve(**solve_kwargs)
                 # restore params if need be

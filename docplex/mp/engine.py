@@ -144,6 +144,9 @@ class IEngine(object):
     def create_pwl_constraint(self, pwl_ct):
         raise NotImplementedError  # pragma: no cover
 
+    def create_batch_pwl_constraints(self, pwl_func, arg_vars, y_vars):
+        raise NotImplementedError
+
     def remove_constraint(self, ct):
         raise NotImplementedError  # pragma: no cover
 
@@ -324,7 +327,10 @@ class MinimalEngine(IEngine):
         self.only_cplex(mname="populate")  # pragma: no cover
 
     def create_pwl_constraint(self, pwl_ct):
-        self.only_cplex(mname="create_quadratic_constraint")  # pragma: no cover
+        self.only_cplex(mname="create_piecewise_constraint")  # pragma: no cover
+
+    def create_batch_pwl_constraints(self, pwl_func, arg_vars, y_vars):
+        self.only_cplex(mname="create_piecewise_constraint")  # pragma: no cover
 
     def create_quadratic_constraint(self, qct):
         self.only_cplex(mname="create_quadratic_constraint")  # pragma: no cover
@@ -356,6 +362,9 @@ class DummyEngine(IEngine):
 
     def create_pwl_constraint(self, pwl_ct):
         return -1  # pragma: no cover
+
+    def create_batch_pwl_constraints(self, pwl_func, arg_vars, y_vars):
+        return [-1] * len(arg_vars)
 
     def set_streams(self, out):
         pass  # pragma: no cover
@@ -560,6 +569,9 @@ class IndexerEngine(DummyEngine):
 
     def create_pwl_constraint(self, pwl_ct):
         return self._scope_incr1(CplexScope.PWL_CT_SCOPE)
+
+    def create_batch_pwl_constraints(self, pwl_func, arg_vars, y_vars):
+        return self._scope_incr(CplexScope.PWL_CT_SCOPE, len(arg_vars))
 
     def get_all_reduced_costs(self, mdl):
         return {}
