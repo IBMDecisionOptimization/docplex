@@ -34,7 +34,6 @@ class PwlFunction(ModelingObjectBase):
     def check_number(logger, arg, caller=None):
         StaticTypeChecker.typecheck_num_nan_inf(logger, arg, caller)
 
-
     @staticmethod
     def check_list_pair_breaksxy(logger, arg):
         if not is_iterable(arg):
@@ -43,7 +42,7 @@ class PwlFunction(ModelingObjectBase):
             # Encapsulate tuple argument into a list: this allows defining a PWL with a tuple if there is only
             #  one element in its definition
             arg = [arg]
-        if len(arg) == 0:
+        if not arg:
             logger.fatal("argument 'breaksxy' must be a non-empty list of (x, y) tuples.")
         prev_pair = None
         pprev_pair = None
@@ -129,6 +128,7 @@ class PwlFunction(ModelingObjectBase):
             self._preslope = preslope
             self._breaksxy = self._reformulate_breaksxy(breaksxy)
             self._postslope = postslope
+            self._cpx_breaks = None
 
         @property
         def preslope(self):
@@ -141,6 +141,15 @@ class PwlFunction(ModelingObjectBase):
         @property
         def postslope(self):
             return self._postslope
+
+        @property
+        def cpx_breaksxy(self):
+            if self._cpx_breaks is None:
+                cpx_breaksx = [float(bkx) for bkx, _ in self._breaksxy]
+                cpx_breaksy = [float(bky) for _, bky in self._breaksxy]
+                self._cpx_breaks = cpx_breaksx, cpx_breaksy, float(self._preslope), float(self._postslope)
+            assert self._cpx_breaks is not None
+            return self._cpx_breaks
 
         def deepcopy(self):
             breaksxy_copy = copy.deepcopy(self.breaksxy)
@@ -273,6 +282,24 @@ class PwlFunction(ModelingObjectBase):
                     nb_discontinuities += 1
                 prev_br = br
             return len(self.breaksxy) - nb_discontinuities - 1
+
+        @property
+        def number_of_breaks(self):
+            return len(self._breaksxy)
+
+        def equals_def_xy(self, other):
+            if not isinstance(other, PwlFunction._PwlAsBreaks):
+                return False
+            if self.preslope != other.preslope:
+                return False
+            if self.postslope != other.postslope:
+                return False
+            if len(self.breaksxy) != len(other.breaksxy):
+                return False
+            for b_l, b_r in zip(self.breaksxy, other.breaksxy):
+                if b_l != b_r:
+                    return False
+            return True
 
         def __add__(self, arg):
             if isinstance(arg, PwlFunction._PwlAsBreaks):
@@ -605,25 +632,80 @@ class PwlFunction(ModelingObjectBase):
     def pwl_def(self):
         return self._pwl_def
 
+    def iter_breaksxy(self):
+        return iter(self._pwl_def_as_breaks._breaksxy)
+
     @property
     def pwl_def_as_breaks(self):
         return self._pwl_def_as_breaks
+
+    @property
+    def number_of_breaks(self):
+        return self._pwl_def_as_breaks.number_of_breaks
+
+    def _cplex_breaks(self):
+        # INTERNAL, use by cplex only
+        pwl_def = self._pwl_def_as_breaks
+        return pwl_def.cpx_breaksxy
 
     # __call__ builds an expression equal to the piecewise linear value of its argument, based
     # on the definition of the PWL function.
     #
     # Args:
-    #     e: Accepts any object that can be transformed into an expression:
-    #         decision variables, expressions, or numbers.
+    #     e: either an expression (a number, variable, or linear expression) or
+    #        a list of variables.
     #
     # Returns:
-    #     An expression that can be used in arithmetic operators and constraints.
+    #     If called with an expression, return a new expression that can be freely combined
+    #     with other types of expression
+    #     If called with a list of variables, returns a lkist of expressions
     #
     # Note:
-    #     Building the expression generates one auxiliary decision variable.
+    #     - Building the expression generates one auxiliary decision variable.
+    #     - Returns an empty list when called with an empty list.
     def __call__(self, e):
-        self.model._checker.typecheck_operand(e, caller="Model.pwl", accept_numbers=True)
-        return self.model._add_pwl_expr(self, e)
+        if is_iterable(e):
+            return self._make_n_pwl_exprs(e)
+        else:
+            return self._make_one_pwl_expr(e)
+
+    def _make_one_pwl_expr(self, arg):
+        m = self._model
+        m._checker.typecheck_operand(arg, caller="Model.pwl", accept_numbers=True)
+        pwl_expr = m._add_pwl_expr(self, arg)
+        return pwl_expr
+
+    def _make_n_pwl_exprs(self, dvars):
+        mdl = self.model
+        # pwl is a pwl function
+        # var_seq is a sequence of vars
+        # return a sequence of pwl exprs
+        lfactory = mdl.lfactory
+
+        # step 1 : build a list of vars
+        arg_vars = mdl._checker.typecheck_var_seq(dvars, caller='Model.make_n_pwls')
+        if not arg_vars:
+            return []
+        nb_args = len(arg_vars)
+        vlbs = [- mdl.infinity] * nb_args
+        fvars = lfactory.new_var_list(None, range(nb_args), vartype=mdl.continuous_vartype,
+                                      lb=vlbs, ub=[], _safe_bounds=True, _add_container=False)
+        # build UNresolved pwl exprs, resolve them later on
+        pwl_exprs = [lfactory.new_pwl_expr(self, av, y_var=fv, resolve=False) for av, fv in
+                     zip(arg_vars, fvars)]
+
+        pwl_cons = [lfactory.new_pwl_constraint(pwl_expr, pwl_expr.name) for pwl_expr in pwl_exprs]
+        engine = mdl.get_engine()
+        # pwl_indices = tuple(engine.create_pwl_constraint(pwl_ct) for pwl_ct in pwl_cons)
+        pwl_indices = tuple(engine.create_batch_pwl_constraints(self, arg_vars, fvars))
+        assert len(pwl_cons) == len(pwl_indices)
+        mdl._register_block_cts(mdl._pwl_scope, pwl_cons, pwl_indices)
+        # mark all exprs as resolved
+        for ex in pwl_exprs:
+            ex.mark_resolved()
+        assert all(ex._is_resolved() for ex in pwl_exprs)
+        # nb vars is unchanged
+        return pwl_exprs
 
     def __hash__(self):
         return id(self)

@@ -40,17 +40,17 @@ def write_csv(env, table, fields, name):
             write_csv_line(ostr, line, encoding)
 
 
-def write_table_as_csv(env, table, name, field_names):
-    '''Writes a kpis dataframe as file which name is specified.
+def write_table_as_csv(env, table, name, field_names, transaction=None):
+    """Writes a dataframe as file which name is specified.
     The data type depends of extension of name.
 
-    This uses the specfied env to write data as attachments
-    '''
+    This uses the specified env to write data as attachments
+    """
     _, ext = os.path.splitext(name)
     ext = ext.lower()
     if ext == '.csv':
         encoding = 'utf-8'
-        with env.get_output_stream(name) as ostr:
+        with env.get_output_stream(name, transaction=transaction) as ostr:
             write_csv_line(ostr, field_names, encoding)
             for line in table:
                 write_csv_line(ostr, line, encoding)

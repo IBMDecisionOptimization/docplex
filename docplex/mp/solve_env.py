@@ -53,6 +53,7 @@ class CplexLocalSolveEnv(SolveEnv):
     def __init__(self, m):
         super(CplexLocalSolveEnv, self).__init__(m)
         self._saved_params = {}
+        self._transaction = get_environment().create_transaction()
 
     def before_solve(self, context):
         mdl = self._model
@@ -65,12 +66,13 @@ class CplexLocalSolveEnv(SolveEnv):
         if the_env.is_wmlworker and auto_publish_details:
             # do not use lambda here
             def env_kpi_hookfn(kpd):
-                the_env.update_solve_details(kpd)
+                the_env.update_solve_details(kpd, transaction=self._transaction)
 
             from docplex_wml.worker.worker_utils import _KpiRecorder
             mdl.kpi_recorder = _KpiRecorder(mdl,
                                             clock=context.solver.kpi_reporting.filter_level,
-                                            publish_hook=env_kpi_hookfn)
+                                            publish_hook=env_kpi_hookfn,
+                                            transaction=self._transaction)
             mdl.add_progress_listener(mdl.kpi_recorder)
 
         # connect progress listeners (if any) if problem is mip
@@ -91,6 +93,8 @@ class CplexLocalSolveEnv(SolveEnv):
                                       model_type=problem_type,
                                       int_vars=self_stats.number_of_integer_variables,
                                       continuous_vars=self_stats.number_of_continuous_variables,
+                                      semicontinuous_vars = self_stats._number_of_semicontinuous_variables,
+                                      semiinteger_vars = self_stats._number_of_semiinteger_variables,
                                       linear_constraints=self_stats.number_of_linear_constraints,
                                       bin_vars=self_stats.number_of_binary_variables,
                                       quadratic_constraints=self_stats.number_of_quadratic_constraints,
@@ -103,7 +107,7 @@ class CplexLocalSolveEnv(SolveEnv):
 
         the_env.notify_start_solve(kpis)
         if auto_publish_details:
-            the_env.update_solve_details(kpis)
+            the_env.update_solve_details(kpis, transaction=self._transaction)
 
         # ---
         #  parameters override if necessary...
@@ -151,7 +155,7 @@ class CplexLocalSolveEnv(SolveEnv):
                 details.update(kpi_details_dict)
                 # add objective with predefined key name
                 details['PROGRESS_CURRENT_OBJECTIVE'] = new_solution.objective_value
-            the_env.update_solve_details(details)
+            the_env.update_solve_details(details, transaction=self._transaction)
 
         if solve_res:
             auto_publish_solution = auto_publishing_result_output_names(context) is not None
@@ -160,14 +164,16 @@ class CplexLocalSolveEnv(SolveEnv):
                 write_result_output(env=the_env,
                                     context=context,
                                     model=mdl,
-                                    solution=solve_res)
+                                    solution=solve_res,
+                                    transaction=self._transaction)
 
             # save kpi
             if auto_publish_kpis_table:
                 write_kpis_table(env=the_env,
                                  context=context,
                                  model=mdl,
-                                 solution=solve_res)
+                                 solution=solve_res,
+                                 transaction=self._transaction)
 
         # restore cached params
         saved_params = self._saved_params
@@ -188,4 +194,4 @@ class CplexLocalSolveEnv(SolveEnv):
         except (AttributeError, ValueError):
             pass
 
-
+        self._transaction.commit()

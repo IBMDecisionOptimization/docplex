@@ -1150,24 +1150,20 @@ class CplexEngine(IEngine):
         try:
 
             pwl_func = pwl_ct.pwl_func
-            pwl_def = pwl_func.pwl_def_as_breaks
             pwlctname = pwl_ct.safe_name
             x_var = pwl_ct.expr
             f_var = pwl_ct.y
-            cpx_breaksx = [float(breakx) for breakx, _ in pwl_def.breaksxy]
-            cpx_breaksy = [float(breaky) for _, breaky in pwl_def.breaksxy]
-            n_breaks = len(cpx_breaksx)
-            assert n_breaks == len(cpx_breaksy)
+            cpx_breaksx, cpx_breaksy, fpreslope, fpostslope = pwl_func._cplex_breaks()
+
             if self.procedural:
                 ret_add = self._fast_add_piecewise_constraint(f_var._index, x_var._index,
-                                                              float(pwl_def.preslope),
+                                                              fpreslope,
                                                               cpx_breaksx, cpx_breaksy,
-                                                              float(pwl_def.postslope),
+                                                              fpostslope,
                                                               name=pwlctname)
             else:
                 ret_add = self._cplex.pwl_constraints.add(f_var._index, x_var._index,
-                                                          float(pwl_def.preslope),
-                                                          float(pwl_def.postslope),
+                                                          fpreslope, fpostslope,
                                                           cpx_breaksx, cpx_breaksy,
                                                           name=pwlctname)
 
@@ -1175,6 +1171,23 @@ class CplexEngine(IEngine):
 
         except AttributeError:  # pragma: no cover
             self._model.fatal("Please update Cplex to version 12.7+ to benefit from Piecewise Linear constraints.")
+
+    def create_batch_pwl_constraints(self, pwl_func, arg_vars, y_vars):
+        nb_vars = len(arg_vars)
+        assert nb_vars == len(y_vars)
+        self._resync_if_needed
+        cpx_breaksx, cpx_breaksy, fpreslope, fpostslope = pwl_func._cplex_breaks()
+        first = -1
+        for v in range(nb_vars):
+            x_var = arg_vars[v]
+            y_var = y_vars[v]
+            ret_add = self._fast_add_piecewise_constraint(y_var._index, x_var._index,
+                                                          fpreslope,
+                                                          cpx_breaksx, cpx_breaksy,
+                                                          fpostslope, name='')
+            if first < 0:
+                first = ret_add
+        return range(first, first + nb_vars)
 
     def remove_constraint(self, ct):
         self._resync_if_needed()
@@ -1783,16 +1796,39 @@ class CplexEngine(IEngine):
                 self._model.fatal('Annotations require CPLEX 12.7.1 or higher')
 
     def create_sos(self, sos_set):
-        cpx_sos_type = sos_set.sos_type._cpx_sos_type()
-        indices = [dv.index for dv in sos_set.iter_variables()]
-        weights = sos_set.weights
+        if self.procedural:
+            return self.fast_create_sos(sos_set)
+        else:
+            # non procedural, slower
+            cpx_sos_type = sos_set.sos_type._cpx_sos_type()
+            indices = [dv.index for dv in sos_set.iter_variables()]
+            weights = sos_set.weights
+            # do NOT pass None to cplex/swig here --> crash
+            cpx_sos_name = sos_set.safe_name
+            # call cplex...
+            sos_index = self._cplex.SOS.add(type=cpx_sos_type,
+                                            SOS=self.cpx_adapter.cplex_module.SparsePair(ind=indices, val=weights),
+                                            name=cpx_sos_name)
+            return sos_index
+
+    def fast_create_sos(self, sos_set):
+        # procedural version
+        cpx = self._cplex
+        cpx_sos_type = sos_set.sos_type.cpx_sos_type
+        # sadly pycplex won't accept a tyuple here
+        indices = [dv._index for dv in sos_set.iter_variables()]
+        weights = sos_set.get_cplex_weights()
         # do NOT pass None to cplex/swig here --> crash
         cpx_sos_name = sos_set.safe_name
-        # call cplex...
-        sos_index = self._cplex.SOS.add(type=cpx_sos_type,
-                                        SOS=self.cpx_adapter.cplex_module.SparsePair(ind=indices, val=weights),
-                                        name=cpx_sos_name)
-        return sos_index
+        numsos = self._model.number_of_sos
+        # sadly pycplex won't accept  tuples here
+        self.cpx_adapter.addsos(cpx._env._e,
+                                cpx._lp, cpx_sos_type,
+                                [0],
+                                indices,
+                                weights,
+                                [cpx_sos_name])
+        return numsos
 
     def clear_all_sos(self):
         self._cplex.SOS.delete()

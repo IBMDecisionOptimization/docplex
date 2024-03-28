@@ -1703,7 +1703,7 @@ if IS_NUMPY_AVAILABLE:
         Returns:
             True if value is a float
         """
-        return (type(val) in FLOAT_TYPES) or numpy.issubdtype(type(val), numpy.float)
+        return (type(val) in FLOAT_TYPES) or numpy.issubdtype(type(val), numpy.float_)
 
 
     def is_number(val):

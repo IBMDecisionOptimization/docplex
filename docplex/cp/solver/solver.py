@@ -568,6 +568,12 @@ class CpoSolver(object):
         if isinstance(mxt, int):
             # Maximize number of workers
             nbw = ctx.params.Workers
+            try:
+                # nbw can be None
+                nbw = int(nbw) if nbw else None
+            except ValueError:
+                # treat badly formatted strings as None
+                nbw = None
             if (nbw is None) or (nbw > mxt):
                 ctx.params.Workers = mxt
                 print("WARNING: Number of workers has been reduced to " + str(mxt) + " to comply with platform limitations.")

@@ -73,6 +73,7 @@ import shutil
 import sys
 import threading
 import time
+from typing import Dict
 import warnings
 
 
@@ -96,6 +97,7 @@ from docplex.util import lazy
 
 def make_new_kpis_dict(allkpis=None, sense = None, model_type = None, int_vars=None, continuous_vars=None,
                        linear_constraints=None, bin_vars=None,
+                       semicontinuous_vars = None, semiinteger_vars = None,
                        quadratic_constraints=None, total_constraints=None,
                        total_variables=None):
     # This is normally called once at the beginning of a solve
@@ -110,6 +112,8 @@ def make_new_kpis_dict(allkpis=None, sense = None, model_type = None, int_vars=N
     # those are the ones required per https://github.ibm.com/IBMDecisionOptimization/dd-planning/issues/2491
     new_details = {'STAT.cplex.modelType' : model_type,
                    'STAT.cplex.size.integerVariables': int_vars,
+                   'STAT.cplex.size.semicontinuousVariables': semicontinuous_vars,
+                   'STAT.cplex.size.semiintegerVariables': semiinteger_vars,
                    'STAT.cplex.size.continousVariables': continuous_vars,
                    'STAT.cplex.size.linearConstraints': linear_constraints,
                    'STAT.cplex.size.booleanVariables': bin_vars,
@@ -208,6 +212,36 @@ class SolveDetailsFilter(object):
         return ret_val
 
 
+class OutputAttachmentTransaction(object):
+    """Handles output attachment transactions
+
+    *New in version 2.26*
+    """
+    def __init__(self, env):
+        self.env = env
+        self.attachments = dict()
+
+    def set_output_attachments(self, attachments: Dict[str, str]):
+        """
+        Adds new attachments to this transaction
+        """
+        self.attachments.update(attachments)
+
+    def commit(self):
+        """
+        Commit the attachments waiting to be publushed.
+        :return:
+        """
+        if self.attachments:
+            self.env.set_output_attachments(self.attachments)
+            self.attachments.clear()
+
+    def close(self):
+        """
+        Closes the transaction, actually setting all the attachments at once.
+        """
+        self.commit()
+
 class Environment(object):
     ''' Methods for interacting with the execution environment.
 
@@ -263,6 +297,16 @@ class Environment(object):
         self.recorded_solve_details_count = 0  # number of solve details that have been sent to recording
         self.autoreset = True
         self.logger = logging.getLogger("docplex.util.environment.logger")
+
+    def create_transaction(self):
+        """
+        Creates a new output attachment transaction
+        :return: an OutputAttachmentTransaction
+
+        *New in version 2.26*
+        """
+        return OutputAttachmentTransaction(self)
+
 
     def _reset_record_history(self, force=False):
         if self.autoreset or force:
@@ -423,8 +467,28 @@ class Environment(object):
             filename: The name of the file to attach.
         '''
         self.logger.debug(lazy(lambda: f"set output attachment: name={name}, filename={filename}"))
+        self.set_output_attachments({name: filename})
 
-    def get_output_stream(self, name):
+    def set_output_attachments(self, attachments):
+        """Sets the output attachments.
+
+        Attachments are recorded as being part of the program output.
+
+        Each attachment is a pair of `name`,`filename` entries.
+
+        When run on premise, ``filename`` is copied to the the working
+        directory (if not already there) under the name ``name``.
+
+        When run on Watson Machine Learning, attachments are set as output.
+
+        Args:
+            attachments: a dict with pairs of `name`,`filename` association.
+
+        *New in version 2.26*
+        """
+        self.logger.debug(lazy(lambda: f"set output attachment: attachments={attachments}"))
+
+    def get_output_stream(self, name, transaction = None):
         ''' Get a file-like object to write the output of the program.
 
         The file is recorded as being part of the program output.
@@ -439,6 +503,8 @@ class Environment(object):
 
         Args:
             name: Name of the output object.
+            transaction (optional): The transaction handler. Can be ignored if the environment does not support
+                transactions.
         Returns:
             A file object to write the output to.
         '''
@@ -510,8 +576,8 @@ class Environment(object):
         self.logger.debug(lazy(lambda: f"Notify start solve: engine_type={engine_type}, solve_details={json.dumps(solve_details, indent=3)}"))
         self._reset_record_history()
 
-    def update_solve_details(self, details):
-        '''Update the solve details.
+    def update_solve_details(self, details, transaction=None):
+        """Update the solve details.
 
         You use this method to send solve details to the solve service.
         If ``context.solver.auto_publish`` is set, the underlying
@@ -523,7 +589,8 @@ class Environment(object):
 
         Args:
             details: A ``dict`` with solve details as key/value pairs.
-        '''
+            transaction: The transaction to publish output attachments
+        """
         self.logger.debug(lazy(lambda: f"Update solve details: {json.dumps(details, indent=3)}"))
         # publish details
         to_publish = None
@@ -542,14 +609,14 @@ class Environment(object):
         if self.details_filter:
             if self.details_filter.filter(details):
                 self.logger.debug("Published as filtered details")
-                self.publish_solve_details(to_publish)
+                self.publish_solve_details(to_publish, transaction=transaction)
             else:
                 # just store the details for later use
                 self.logger.debug("Publish filter refused details, stored as unpublished")
                 self.unpublished_details = to_publish
         else:
             self.logger.debug("Published as unfiltered details")
-            self.publish_solve_details(to_publish)
+            self.publish_solve_details(to_publish, transaction=transaction)
 
     def record_in_history(self, details):
         self.recorded_solve_details_count += 1
@@ -589,15 +656,15 @@ class Environment(object):
             details['%s.history' % k] = json.dumps(list(the_list))
         return details if any_added else False
 
-    def publish_solve_details(self, details):
-        '''Actually publish the solve specified details.
+    def publish_solve_details(self, details, transaction=None):
+        """Actually publish the solve specified details.
 
         Returns:
             The published details
-        '''
+        """
         self.logger.debug(lazy(lambda: f"Publish solve details: {json.dumps(details, indent=3)}"))
 
-    def notify_end_solve(self, status, solve_time=None):
+    def notify_end_solve(self, status, solve_time=None, transaction=None):
         # ===============================================================================
         #         '''Notify the solving environment that the solve as ended.
         #
@@ -620,12 +687,12 @@ class Environment(object):
         self.logger.debug(f"Notify end solve, status={status}, solve_time={solve_time}")
         if self.unpublished_details:
             self.logger.debug("Notify end solve: has unpublished details, so publish them")
-            self.publish_solve_details(self.unpublished_details)
+            self.publish_solve_details(self.unpublished_details, transaction=transaction)
         if self.recorded_solve_details_count >= 1 and self.last_history_record:
             self.logger.debug("Notify end solve: has more than 1 solve details, prepare and publish history")
             last_details = self.prepare_last_history()
             if last_details:
-                self.publish_solve_details(last_details)
+                self.publish_solve_details(last_details, transaction=transaction)
 
     def set_stop_callback(self, cb):
         '''Sets a callback that is called when the script is run on
@@ -726,7 +793,7 @@ class AbstractLocalEnvironment(Environment):
     def get_input_stream(self, name):
         return open(name, "rb")
 
-    def get_output_stream(self, name):
+    def get_output_stream(self, name, transaction = None):
         return open(name, "wb")
 
     def get_parameter(self, name):
@@ -736,13 +803,17 @@ class AbstractLocalEnvironment(Environment):
         return os.environ
 
     def set_output_attachment(self, name, filename):
-        # check that name leads to a file in cwd
-        attachment_abs_path = os.path.dirname(os.path.abspath(name))
-        if attachment_abs_path != os.getcwd():
-            raise ValueError('Illegal attachment name')
+        self.set_output_attachments({name: filename})
 
-        if os.path.dirname(os.path.abspath(filename)) != os.getcwd():
-            shutil.copyfile(filename, name)  # copy to current
+    def set_output_attachments(self, attachments):
+        for name, filename in attachments.items():
+            # check that name leads to a file in cwd
+            attachment_abs_path = os.path.dirname(os.path.abspath(name))
+            if attachment_abs_path != os.getcwd():
+                raise ValueError(f'Illegal attachment name: {name}')
+
+            if os.path.dirname(os.path.abspath(filename)) != os.getcwd():
+                shutil.copyfile(filename, name)  # copy to current
 
     def get_available_core_count(self):
         return self._available_cores
@@ -853,10 +924,30 @@ def set_output_attachment(name, filename):
         name: Name of the output object.
         filename: The name of the file to attach.
     '''
-    return default_environment.set_output_attachment(name, filename)
+    return set_output_attachments({name, filename})
 
 
-def get_output_stream(name):
+def set_output_attachments(attachments):
+    """Sets the specified attachments
+
+    The attachments are recorded as being part of the program output.
+
+    The `attachments` are a dict of `name` to `filename` mapping.
+
+    When run on premise, filenames are copied to the working
+    directory (if not already there) under the names.
+
+    When run on Watson Machine Learning, the files are attached as output attachment.
+
+    Args:
+        attachments: a dict of `name`:`filename` mapping
+
+    *New in version 2.26*
+    """
+    return default_environment.set_output_attachments(attachments)
+
+
+def get_output_stream(name, transaction = None):
     ''' Get a file-like object to write the output of the program.
 
     The file is recorded as being part of the program output.
@@ -871,6 +962,8 @@ def get_output_stream(name):
 
     Args:
         name: Name of the output object.
+        transaction (optional): The transaction handler. Can be ignored if the environment does not support
+           transactions.
     Returns:
         A file object to write the output to.
     '''

@@ -1,8 +1,26 @@
 Changelog
 ---------
 
-Changed in 2.24.232:
+Changed in 2.27.239:
 ````````````````````
+
+* PEP517, PEP518 build
+* Faster PWLs from `PR#6 <https://github.com/IBMDecisionOptimization/docplex/pull/6>`__.
+
+Changed in 2.26.237 (2023.07):
+``````````````````````````````
+
+* Support for transactional output attachments
+
+Changed in 2.25.236 (2023.01):
+``````````````````````````````
+
+* Support of .ops files for parameter handling.
+* Improvement on the Nurse example.
+
+Changed in 2.24.232 (2022.11):
+``````````````````````````````
+
 * Optional CPLEX import for qiskit
 * Fix in cut getter
 
