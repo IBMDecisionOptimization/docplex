@@ -114,8 +114,8 @@ class LPModelPrinter(TextModelPrinter):
         pwl_func = pwl.pwl_func
         pwl_def = pwl_func.pwl_def_as_breaks
         wrapper.write('%s' % num2string_fn(pwl_def.preslope))
-        for pair in pwl_def.breaksxy:
-            wrapper.write('(%s, %s)' % (num2string_fn(pair[0]), num2string_fn(pair[1])))
+        for bkx, bky in pwl_func.iter_breaksxy():
+            wrapper.write('(%s, %s)' % (num2string_fn(bkx), num2string_fn(bky)))
         wrapper.write('%s' % num2string_fn(pwl_def.postslope))
 
     def _print_constraint_label(self, wrapper, ct, name_map):

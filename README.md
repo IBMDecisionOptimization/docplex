@@ -51,9 +51,7 @@ These third-party dependencies are automatically installed with ``pip``
 - [requests](https://pypi.python.org/pypi/requests)
 - [six](https://pypi.python.org/pypi/six)
 - [certifi](https://pypi.python.org/pypi/certifi)
-- [chardet](https://pypi.python.org/pypi/chardet)
-- [idna](https://pypi.python.org/pypi/idna)
-- [urllib3](https://pypi.python.org/pypi/urllib3)
+
 
 
 ## License
