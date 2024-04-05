@@ -155,7 +155,7 @@ class PublishResultAsDf(object):
         return names
 
 
-def write_kpis_table(env, context, model, solution):
+def write_kpis_table(env, context, model, solution, transaction=None):
     names = auto_publishing_kpis_table_names(context)
     kpis_table = []
     for k in model.iter_kpis():
@@ -165,15 +165,15 @@ def write_kpis_table(env, context, model, solution):
         field_names = [get_kpis_name_field(context),
                        get_kpis_value_field(context)]
         for name in names:
-            write_table_as_csv(env, kpis_table, name, field_names)
+            write_table_as_csv(env, kpis_table, name, field_names, transaction=transaction)
 
 
-def write_solution(env, solution, name):
-    with env.get_output_stream(name) as output:
+def write_solution(env, solution, name, transaction=None):
+    with env.get_output_stream(name, transaction=transaction) as output:
         output.write(solution.export_as_json_string().encode('utf-8'))
 
 
-def write_result_output(env, context, model, solution):
+def write_result_output(env, context, model, solution, transaction=None):
     names = auto_publishing_result_output_names(context)
     for name in names:
-        write_solution(env, solution, name)
+        write_solution(env, solution, name, transaction=transaction)

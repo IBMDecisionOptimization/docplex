@@ -138,111 +138,118 @@ class EnvSolverListener(CpoSolverListener):
         if sres is None:
             return
 
-        # Publish solve details
-        if self.publish_context.get_attribute('solve_details', True):
-            self.publish_context.log(2, "Publish solve details")
+        transaction = None
+        try:
+            transaction = self.env.create_transaction()
 
-            # Get solver infos
-            infos = sres.get_infos()
-            nb_int_vars      = infos.get("NumberOfIntegerVariables")
-            nb_interval_vars = infos.get("NumberOfIntervalVariables")
-            nb_sequence_vars = infos.get("NumberOfSequenceVariables")
-            nb_constraints   = infos.get("NumberOfConstraints")
-            nb_variables     = infos.get("NumberOfVariables")
-            memory_usage     = infos.get("MemoryUsage")
-            nb_of_branches   = infos.get("NumberOfBranches")
-            solve_time       = infos.get("SolveTime")
+            # Publish solve details
+            if self.publish_context.get_attribute('solve_details', True):
+                self.publish_context.log(2, "Publish solve details")
 
-            # Build solve details
-            sdetails = {}
-            if nb_int_vars is not None:
-                sdetails["MODEL_DETAIL_INTEGER_VARS"]      = nb_int_vars
-                sdetails["STAT.cpo.size.integerVariables"] = nb_int_vars
-            if nb_interval_vars is not None:
-                sdetails["MODEL_DETAIL_INTERVAL_VARS"]      = nb_interval_vars
-                sdetails["STAT.cpo.size.intervalVariables"] = nb_interval_vars
-            if nb_sequence_vars is not None:
-                sdetails["MODEL_DETAIL_SEQUENCE_VARS"]      = nb_sequence_vars
-                sdetails["STAT.cpo.size.sequenceVariables"] = nb_sequence_vars
-            if nb_constraints is not None:
-                sdetails["MODEL_DETAIL_CONSTRAINTS"]  = nb_constraints
-                sdetails["STAT.cpo.size.constraints"] = nb_constraints
+                # Get solver infos
+                infos = sres.get_infos()
+                nb_int_vars      = infos.get("NumberOfIntegerVariables")
+                nb_interval_vars = infos.get("NumberOfIntervalVariables")
+                nb_sequence_vars = infos.get("NumberOfSequenceVariables")
+                nb_constraints   = infos.get("NumberOfConstraints")
+                nb_variables     = infos.get("NumberOfVariables")
+                memory_usage     = infos.get("MemoryUsage")
+                nb_of_branches   = infos.get("NumberOfBranches")
+                solve_time       = infos.get("SolveTime")
 
-            # Add other STAT values
-            sdetails["STAT.cpo.modelType"] = "CPO"
-            if nb_variables is not None:
-                sdetails["STAT.cpo.size.variables"] = nb_variables
-            if memory_usage is not None:
-                sdetails["STAT.cpo.solve.memoryUsage"] = memory_usage
-            if nb_of_branches is not None:
-                sdetails["STAT.cpo.solve.numberOfBranches"] = nb_of_branches
-            if solve_time is not None:
-                sdetails["STAT.cpo.solve.time"] = solve_time
+                # Build solve details
+                sdetails = {}
+                if nb_int_vars is not None:
+                    sdetails["MODEL_DETAIL_INTEGER_VARS"]      = nb_int_vars
+                    sdetails["STAT.cpo.size.integerVariables"] = nb_int_vars
+                if nb_interval_vars is not None:
+                    sdetails["MODEL_DETAIL_INTERVAL_VARS"]      = nb_interval_vars
+                    sdetails["STAT.cpo.size.intervalVariables"] = nb_interval_vars
+                if nb_sequence_vars is not None:
+                    sdetails["MODEL_DETAIL_SEQUENCE_VARS"]      = nb_sequence_vars
+                    sdetails["STAT.cpo.size.sequenceVariables"] = nb_sequence_vars
+                if nb_constraints is not None:
+                    sdetails["MODEL_DETAIL_CONSTRAINTS"]  = nb_constraints
+                    sdetails["STAT.cpo.size.constraints"] = nb_constraints
 
-            # Set problem type
-            sdetails["MODEL_DETAIL_TYPE"] = "CPO CP" if nb_interval_vars in (0, "0", None) else "CPO Scheduling"
+                # Add other STAT values
+                sdetails["STAT.cpo.modelType"] = "CPO"
+                if nb_variables is not None:
+                    sdetails["STAT.cpo.size.variables"] = nb_variables
+                if memory_usage is not None:
+                    sdetails["STAT.cpo.solve.memoryUsage"] = memory_usage
+                if nb_of_branches is not None:
+                    sdetails["STAT.cpo.solve.numberOfBranches"] = nb_of_branches
+                if solve_time is not None:
+                    sdetails["STAT.cpo.solve.time"] = solve_time
 
-            # Set objective sens
-            mdl = sres.get_model()
-            if mdl and not mdl.is_satisfaction():
-                sdetails["MODEL_DETAIL_OBJECTIVE_SENSE"] = "maximize" if mdl.is_maximization() else "minimize"
+                # Set problem type
+                sdetails["MODEL_DETAIL_TYPE"] = "CPO CP" if nb_interval_vars in (0, "0", None) else "CPO Scheduling"
 
-            # Set objective if any
-            objs = sres.get_objective_values()
-            if objs is not None:
-                sdetails["PROGRESS_CURRENT_OBJECTIVE"] = ';'.join([str(x) for x in objs])
+                # Set objective sens
+                mdl = sres.get_model()
+                if mdl and not mdl.is_satisfaction():
+                    sdetails["MODEL_DETAIL_OBJECTIVE_SENSE"] = "maximize" if mdl.is_maximization() else "minimize"
 
-            # Set bound if any
-            bnds = sres.get_objective_bounds()
-            if bnds is not None:
-                sbnd = ';'.join([str(x) for x in bnds])
-                sdetails["PROGRESS_BEST_OBJECTIVE"] = sbnd  # Ugly, should have been PROGRESS_BEST_BOUND
-                sdetails["PROGRESS_BEST_BOUND"] = sbnd      # Added to prepare future use
+                # Set objective if any
+                objs = sres.get_objective_values()
+                if objs is not None:
+                    sdetails["PROGRESS_CURRENT_OBJECTIVE"] = ';'.join([str(x) for x in objs])
 
-            # Set gap if any
-            gaps = sres.get_objective_gaps()
-            if gaps is not None:
-                sdetails["PROGRESS_GAP"] = ';'.join([str(x) for x in gaps])
+                # Set bound if any
+                bnds = sres.get_objective_bounds()
+                if bnds is not None:
+                    sbnd = ';'.join([str(x) for x in bnds])
+                    sdetails["PROGRESS_BEST_OBJECTIVE"] = sbnd  # Ugly, should have been PROGRESS_BEST_BOUND
+                    sdetails["PROGRESS_BEST_BOUND"] = sbnd      # Added to prepare future use
 
-            # Set KPIs if any
-            kpis = sres.get_kpis()
-            if kpis:
-                # Add ordered list of kpi names
-                sdetails["MODEL_DETAIL_KPIS"] = json.dumps(list(kpis.keys()))
-                # Add KPIs
-                for k, v in kpis.items():
-                    sdetails["KPI." + k] = v
+                # Set gap if any
+                gaps = sres.get_objective_gaps()
+                if gaps is not None:
+                    sdetails["PROGRESS_GAP"] = ';'.join([str(x) for x in gaps])
 
-            # Submit details to environment
-            if self.env.is_wmlworker:
-                from docplex_wml.worker.worker_utils import make_cpo_new_kpis_dict
-                new_kpis = make_cpo_new_kpis_dict(mdl, solver)
-                sdetails.update(new_kpis)
-            self.publish_context.log(3, "Solve details: ", sdetails)
-            self.env.update_solve_details(sdetails)
-
-        # Write JSON solution as output
-        resout = self.publish_context.get_attribute('result_output', 'solution.json')
-        if resout:
-            jdoc = solver.agent._get_last_json_result_string()
-            if jdoc is not None:
-                self.publish_context.log(2, "Publish JSON result output in '", resout, "'")
-                with self.env.get_output_stream(resout) as fp:
-                    fp.write(jdoc.encode('utf-8'))
-
-        # Publish kpis
-        kpiout = self.publish_context.get_attribute('kpis_output', 'kpis.csv')
-        if kpiout:
-            kpis = sres.get_kpis()
-            if kpis:
-                self.publish_context.log(2, "Publish KPIs result output in '", kpiout, "'")
-                fname  = self.publish_context.get_attribute('kpis_output_field_name',  'Name')
-                fvalue = self.publish_context.get_attribute('kpis_output_field_value', 'Value')
-                with self.env.get_output_stream(kpiout) as fp:
-                    fp.write('"{}","{}"\n'.format(fname, fvalue).encode('utf-8'))
+                # Set KPIs if any
+                kpis = sres.get_kpis()
+                if kpis:
+                    # Add ordered list of kpi names
+                    sdetails["MODEL_DETAIL_KPIS"] = json.dumps(list(kpis.keys()))
+                    # Add KPIs
                     for k, v in kpis.items():
-                        fp.write('{},{}\n'.format(encode_csv_string(k), v).encode('utf-8'))
+                        sdetails["KPI." + k] = v
 
+                # Submit details to environment
+                if self.env.is_wmlworker:
+                    from docplex_wml.worker.worker_utils import make_cpo_new_kpis_dict
+                    new_kpis = make_cpo_new_kpis_dict(mdl, solver)
+                    sdetails.update(new_kpis)
+                self.publish_context.log(3, "Solve details: ", sdetails)
+                self.env.update_solve_details(sdetails, transaction=transaction)
+
+            # Write JSON solution as output
+            resout = self.publish_context.get_attribute('result_output', 'solution.json')
+            if resout:
+                jdoc = solver.agent._get_last_json_result_string()
+                if jdoc is not None:
+                    self.publish_context.log(2, "Publish JSON result output in '", resout, "'")
+                    with self.env.get_output_stream(resout, transaction=transaction) as fp:
+                        fp.write(jdoc.encode('utf-8'))
+
+            # Publish kpis
+            kpiout = self.publish_context.get_attribute('kpis_output', 'kpis.csv')
+            if kpiout:
+                kpis = sres.get_kpis()
+                if kpis:
+                    self.publish_context.log(2, "Publish KPIs result output in '", kpiout, "'")
+                    fname  = self.publish_context.get_attribute('kpis_output_field_name',  'Name')
+                    fvalue = self.publish_context.get_attribute('kpis_output_field_value', 'Value')
+                    with self.env.get_output_stream(kpiout, transaction=transaction) as fp:
+                        fp.write('"{}","{}"\n'.format(fname, fvalue).encode('utf-8'))
+                        for k, v in kpis.items():
+                            fp.write('{},{}\n'.format(encode_csv_string(k), v).encode('utf-8'))
+
+        finally:
+            if transaction:
+                transaction.commit()
 
     def conflict_found(self, solver, cflct):
         """ Signal that a conflict has been found.
