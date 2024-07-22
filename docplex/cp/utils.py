@@ -1658,7 +1658,6 @@ if IS_NUMPY_AVAILABLE:
     INTEGER_TYPES.add(numpy.uint32)
     INTEGER_TYPES.add(numpy.uint64)
 
-    FLOAT_TYPES.add(numpy.float_)
     FLOAT_TYPES.add(numpy.float16)
     FLOAT_TYPES.add(numpy.float32)
     FLOAT_TYPES.add(numpy.float64)
