@@ -23,7 +23,7 @@ const initialiseBizStyle = () => {
 }
 
 window.addEventListener("resize",
-  () => (document.querySelector("li.nav-item-0 a").innerText = (window.innerWidth <= 776) ? "Top" : "IBM® Decision Optimization CPLEX® Modeling for Python (DOcplex) V2.27 documentation")
+  () => (document.querySelector("li.nav-item-0 a").innerText = (window.innerWidth <= 776) ? "Top" : "IBM® Decision Optimization CPLEX® Modeling for Python (DOcplex) V2.28 documentation")
 )
 
 if (document.readyState !== "loading") initialiseBizStyle()

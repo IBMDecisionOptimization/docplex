@@ -461,22 +461,39 @@ class CpoSolverLocal(CpoSolverAgent):
         # Initialize first error string to enrich exception if any
         firsterror = None
 
+        # There is a bug in the messages sent by older versions of the C++ library with multiple workers and Python callbacks.
+        # The bug that may happen is that an EVT_CALLBACK_EVENT may be not followed immediately by its corresponding EVT_CALLBACK_DATA.
+        # The workaround here memorizes the type of callback event, and as long as there are other events or EVT_CALLBACK_EVENT of the same type,
+        # we can wait for the EVT_CALLBACK_DATA, and process it when it arrives.
+        # If there is an EVT_CALLBACK_EVENT of another type before the EVT_CALLBACK_DATA, then we throw all the callbacks
+        # events waiting (as we are not able to match the EVT_CALLBACK_DATA with the good type of EVT_CALLBACK_EVENT).
+        # (In practice we have seen only an EVT_BLACKBOX_FUNCALL sent between an EVT_CALLBACK_EVENT and its corresponding EVT_CALLBACK_DATA.)
+        numOpeningEvents = 0
+        typeOfOpeningEvents = None
+        stackingOpeningEvent = True        
+
         # Read events
         while True:
             # Read and process next message
             evt, data = self._read_message()
-
+ 
             if evt == xevt:
                 return data
-
+                
             elif evt == EVT_CALLBACK_EVENT:
-                # First read the callback event
-                event = data
-                # Read event data in next message
-                evt, data = self._read_message()
-                assert evt == EVT_CALLBACK_DATA
-                res = self._create_result_object(CpoSolveResult, data)
-                self.solver._notify_callback_event(event, res)
+                # store the callback event
+                if numOpeningEvents == 0 :
+                    stackingOpeningEvent = True
+                    typeOfOpeningEvents = data
+                elif data != typeOfOpeningEvents:
+                    stackingOpeningEvent = False
+                numOpeningEvents = numOpeningEvents+1
+            elif evt == EVT_CALLBACK_DATA:
+                assert numOpeningEvents>0
+                numOpeningEvents = numOpeningEvents-1
+                if stackingOpeningEvent: 
+                    res = self._create_result_object(CpoSolveResult, data)
+                    self.solver._notify_callback_event(typeOfOpeningEvents, res)
 
             elif evt == EVT_BLACKBOX_FUNCALL:
                 # Retrieve dialog id

@@ -57,7 +57,8 @@ try:
     __int_types.add(numpy.uint32)
     __float_types.add(numpy.uint64)
 
-    __float_types.add(numpy.float_)
+    if npv < '2.0':
+        __float_types.add(numpy.float_)
     __float_types.add(numpy.float16)
     __float_types.add(numpy.float32)
     __float_types.add(numpy.float64)

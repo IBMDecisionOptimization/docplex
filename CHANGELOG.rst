@@ -1,8 +1,14 @@
 Changelog
 ---------
 
-Changed in 2.27.239:
+Changed in 2.28.240:
 ````````````````````
+
+* In ``docplex.cp``: robustify the handling of callback messages coming from CP Optimizer
+* Allows to use numpy 2.0
+
+Changed in 2.27.239 (2024.04):
+``````````````````````````````
 
 * PEP517, PEP518 build
 * Faster PWLs from `PR#6 <https://github.com/IBMDecisionOptimization/docplex/pull/6>`__.
