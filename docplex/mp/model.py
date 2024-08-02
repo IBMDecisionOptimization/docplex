@@ -4166,7 +4166,7 @@ class Model(object):
 
         Args:
             cts: An iterable of linear constraints; can be a list, a set or a comprehensions.
-                Any Python object, which can be iterated on and yield consttraint objects.
+                Any Python object, which can be iterated on and yield constraint objects.
             names: An optional iterable on strings. ANy Python object which can be iterated on
                 and yield strings. The default value is None, meaning no names are set.
 
