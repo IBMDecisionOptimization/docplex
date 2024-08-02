@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 import json
+import builtins
 
 from docplex.util.environment import get_environment
 from docplex.mp.model import Model
@@ -110,7 +111,7 @@ def run_GAP_model_with_Lagrangian_relaxation(As, Bs, Cs, max_iters=101, **kwargs
             else:
                 # update multipliers and start loop again.
                 scale_factor = 1.0 / float(loop_count)
-                multipliers = [max(multipliers[i] - scale_factor * penalties[i], 0.) for i in c_range]
+                multipliers = [builtins.max(multipliers[i] - scale_factor * penalties[i], 0.) for i in c_range]
                 print('{0}> -- loop continues, m={1!s}, justifier={2:g}'.format(loop_count, multipliers, justifier))
 
     return best

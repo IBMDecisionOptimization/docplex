@@ -56,6 +56,10 @@ try:
     import numpy
     IS_NUMPY_AVAILABLE = True
     NUMPY_NDARRAY = numpy.ndarray
+    if numpy.__version__ < '2.0':
+        IS_NUMPY_VERSION_LESS_THAN_2 = True
+    else:
+        IS_NUMPY_VERSION_LESS_THAN_2 = False
 except:
     IS_NUMPY_AVAILABLE = False
     NUMPY_NDARRAY = False
@@ -1658,7 +1662,8 @@ if IS_NUMPY_AVAILABLE:
     INTEGER_TYPES.add(numpy.uint32)
     INTEGER_TYPES.add(numpy.uint64)
 
-    FLOAT_TYPES.add(numpy.float_)
+    if IS_NUMPY_VERSION_LESS_THAN_2:
+        FLOAT_TYPES.add(numpy.float_)
     FLOAT_TYPES.add(numpy.float16)
     FLOAT_TYPES.add(numpy.float32)
     FLOAT_TYPES.add(numpy.float64)
@@ -1703,7 +1708,10 @@ if IS_NUMPY_AVAILABLE:
         Returns:
             True if value is a float
         """
-        return (type(val) in FLOAT_TYPES) or numpy.issubdtype(type(val), numpy.float_)
+        if IS_NUMPY_VERSION_LESS_THAN_2:
+            return (type(val) in FLOAT_TYPES) or numpy.issubdtype(type(val), numpy.float_)
+        else:
+            return (type(val) in FLOAT_TYPES) or numpy.issubdtype(type(val), numpy.float64)
 
 
     def is_number(val):

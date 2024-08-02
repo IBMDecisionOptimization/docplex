@@ -6,11 +6,11 @@
   <head>
     <meta charset="iso-8859-1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>docplex.cp.utils &#8212; DOcplex.CP: Constraint Programming Modeling for Python V2.27 documentation</title>
+    <title>docplex.cp.utils &#8212; DOcplex.CP: Constraint Programming Modeling for Python V2.28 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css?v=c92c1228" />
     
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=49c2ab22"></script>
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=3c40121d"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.CP: Constraint Programming Modeling for Python V2.27 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.CP: Constraint Programming Modeling for Python V2.28 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">docplex.cp.utils</a></li> 
       </ul>
@@ -100,6 +100,10 @@
     <span class="kn">import</span> <span class="nn">numpy</span>
     <span class="n">IS_NUMPY_AVAILABLE</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">NUMPY_NDARRAY</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="k">if</span> <span class="n">numpy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&lt;</span> <span class="s1">&#39;2.0&#39;</span><span class="p">:</span>
+        <span class="n">IS_NUMPY_VERSION_LESS_THAN_2</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">IS_NUMPY_VERSION_LESS_THAN_2</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="n">IS_NUMPY_AVAILABLE</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">NUMPY_NDARRAY</span> <span class="o">=</span> <span class="kc">False</span>
@@ -1702,7 +1706,8 @@
     <span class="n">INTEGER_TYPES</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">uint32</span><span class="p">)</span>
     <span class="n">INTEGER_TYPES</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">uint64</span><span class="p">)</span>
 
-    <span class="n">FLOAT_TYPES</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">IS_NUMPY_VERSION_LESS_THAN_2</span><span class="p">:</span>
+        <span class="n">FLOAT_TYPES</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
     <span class="n">FLOAT_TYPES</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
     <span class="n">FLOAT_TYPES</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
     <span class="n">FLOAT_TYPES</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
@@ -1747,7 +1752,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            True if value is a float</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="ow">in</span> <span class="n">FLOAT_TYPES</span><span class="p">)</span> <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">IS_NUMPY_VERSION_LESS_THAN_2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="ow">in</span> <span class="n">FLOAT_TYPES</span><span class="p">)</span> <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float_</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="ow">in</span> <span class="n">FLOAT_TYPES</span><span class="p">)</span> <span class="ow">or</span> <span class="n">numpy</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
 
     <span class="k">def</span> <span class="nf">is_number</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
@@ -2387,7 +2395,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.CP: Constraint Programming Modeling for Python V2.27 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.CP: Constraint Programming Modeling for Python V2.28 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">docplex.cp.utils</a></li> 
       </ul>
