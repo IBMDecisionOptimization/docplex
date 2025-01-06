@@ -1095,7 +1095,7 @@ def make_attachment_name(name):
 
         - is limited to 255 characters;
         - can include only ASCII characters;
-        - cannot include the characters `/\?%*:|"<>`, the space character, or the null character; and
+        - cannot include the characters `/\\?%*:|"<>`, the space character, or the null character; and
         - cannot include _ as the first character.
 
     This method replace all unauthorized characters with _, then removing leading
