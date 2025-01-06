@@ -6,11 +6,11 @@
   <head>
     <meta charset="iso-8859-1" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>docplex.mp.solution &#8212; DOcplex.MP: Mathematical Programming Modeling for Python V2.28 documentation</title>
+    <title>docplex.mp.solution &#8212; DOcplex.MP: Mathematical Programming Modeling for Python V2.29 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css?v=c92c1228" />
     
-    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=3c40121d"></script>
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=588fc259"></script>
     <script src="../../../_static/doctools.js?v=888ff710"></script>
     <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../../_static/bizstyle.js"></script>
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.MP: Mathematical Programming Modeling for Python V2.28 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.MP: Mathematical Programming Modeling for Python V2.29 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">docplex.mp.solution</a></li> 
       </ul>
@@ -448,6 +448,11 @@
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">self_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_objective</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">self_obj</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="n">model</span><span class="o">.</span><span class="n">has_multi_objective</span><span class="p">():</span>
+            <span class="n">nbMultiObj</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">number_of_multi_objective_exprs</span>
+            <span class="n">my_multiobj</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_multi_objective</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">get_value</span><span class="p">(</span><span class="n">my_multiobj</span><span class="o">.</span><span class="n">exprs</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbMultiObj</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">self_obj</span> <span class="k">if</span> <span class="n">is_indexable</span><span class="p">(</span><span class="n">self_obj</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">self_obj</span><span class="p">]</span>
 
     <span class="nd">@property</span>
@@ -1545,7 +1550,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.MP: Mathematical Programming Modeling for Python V2.28 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">DOcplex.MP: Mathematical Programming Modeling for Python V2.29 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">docplex.mp.solution</a></li> 
       </ul>

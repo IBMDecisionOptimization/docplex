@@ -404,6 +404,11 @@ class SolveSolution(object):
 
         """
         self_obj = self._objective
+        model = self.model
+        if not isinstance(self_obj, list) and model.has_multi_objective():
+            nbMultiObj = model.number_of_multi_objective_exprs
+            my_multiobj = model._multi_objective
+            return [self.get_value(my_multiobj.exprs[i]) for i in range(nbMultiObj)]
         return self_obj if is_indexable(self_obj) else [self_obj]
 
     @property

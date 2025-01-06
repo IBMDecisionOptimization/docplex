@@ -621,9 +621,9 @@ class Environment(object):
     def record_in_history(self, details):
         self.recorded_solve_details_count += 1
         self.logger.debug(lazy(lambda: f"record in history: {json.dumps(details)}"))
+        current_ts = round(time.time(), self.record_history_time_decimals)
         for f in self.record_history_fields:
             if f in details:
-                current_ts = round(time.time(), self.record_history_time_decimals)
                 current_history_element = [current_ts, details[f]]
                 l = self.record_history.get(f, deque([], self.record_history_size))
                 self.record_history[f] = l
