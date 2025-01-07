@@ -1,10 +1,21 @@
 Changelog
 ---------
 
-Changed in 2.28.240:
+Changed in 2.29.241:
 ````````````````````
 
+* each record of a solve history use a unique timestamp for its fields
+
+
+Changed in 2.28.240 (2024.08):
+``````````````````````````````
+
 * In ``docplex.cp``: robustify the handling of callback messages coming from CP Optimizer
+* Allows to use numpy 2.0
+
+Changed in 2.27.239 (2024.04):
+``````````````````````````````
+
 * Allows to use numpy 2.0
 
 Changed in 2.27.239 (2024.04):
