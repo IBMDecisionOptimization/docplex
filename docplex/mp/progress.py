@@ -93,7 +93,7 @@ class ProgressClock(Enum):
 
         - All: the listener listens to all calls from CPLEX.
         - BestBound: listen to changes in best bound, not necessarily with a solution present.
-        - Solutions: listen to all intermediate solutions, not necessarily impriving.
+        - Solutions: listen to all intermediate solutions, not necessarily improving.
             Nothing prevents being called several times with an identical solution.
 
         - Gap: listen to intermediate solutions, where either objective or best bound has improved.
