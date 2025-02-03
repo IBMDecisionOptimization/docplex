@@ -5648,7 +5648,6 @@ class Model(object):
         """
         return self._export_from_cplex(path, basename, format_spec="sav.gz")
 
-
     def _export_from_cplex(self, path=None, basename=None, hide_user_names=False,
                            format_spec="lp"):
         return self._export(path, basename,
@@ -5713,7 +5712,7 @@ class Model(object):
             printer.set_mangle_names(hide_user_names)
             printer.printModel(self, stream)
         else:
-            self.__engine.export(stream, format_spec)
+            self.__engine.export(stream, format_)
 
     def export_to_stream(self, stream, hide_user_names=False, format_spec="lp"):
         """ Export the model to an output stream in LP format.
@@ -5731,7 +5730,9 @@ class Model(object):
                 and `c1`, `c2`, ,... for constraints. Default is to keep user names.
 
         """
-        self._export_to_stream(stream, hide_user_names, format_spec)
+        if format_spec != "lp":
+            self.fatal("Model.export_to_stream() is only available for LP format, \"{0}\" not supported", format_spec)
+        self._export_to_stream(stream, hide_user_names, format_spec="lp")
 
     def export_as_lp_string(self, hide_user_names=False):
         """ Exports the model to a string in LP format.
@@ -5746,7 +5747,9 @@ class Model(object):
         Returns:
             A string, containing the model exported in LP format.
         """
-        return self.export_to_string(hide_user_names, "lp")
+        oss = StringIO()
+        self._export_to_stream(oss, hide_user_names)
+        return oss.getvalue()
 
     @property
     def lp_string(self):
@@ -5796,11 +5799,6 @@ class Model(object):
         else:
             return raw_res.decode(self.parameters.read.fileencoding.get())
 
-    def export_to_string(self, hide_user_names=False, format_spec="lp"):
-        # INTERNAL
-        oss = StringIO()
-        self._export_to_stream(oss, hide_user_names, format_spec)
-        return oss.getvalue()
 
     def export_parameters_as_prm(self, path=None, basename=None):
         # path is either a nonempty path string or None
