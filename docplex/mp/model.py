@@ -5501,11 +5501,10 @@ class Model(object):
 
     def _get_printer(self, format_spec, do_raise=False, silent=False):
         # INTERNAL
-        printer_kwargs = {'full_obj': self._print_full_obj}
         format_ = parse_format(format_spec)
         printer = None
         if format_.name == 'LP':
-            printer = LPModelPrinter(**printer_kwargs)
+            printer = self._new_lp_printer()
         else:
             if do_raise:
                 self.fatal("Unsupported output format: {0!s}", format_spec)
