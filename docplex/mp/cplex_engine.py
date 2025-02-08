@@ -2048,12 +2048,13 @@ class CplexEngine(IEngine):
             is_mip = cpx._is_MIP()
 
             solve_ok = self._is_solve_status_ok(cpx_status)
-            if solve_ok:
-                nb_iterations, nb_nodes_processed = get_progress_details(cpx)
-                if is_mip:
+            if is_mip:
+                if not self._is_multiobj():
+                    cpx_bestbound = cpx.solution.MIP.get_best_objective()
+                if solve_ok:
+                    nb_iterations, nb_nodes_processed = get_progress_details(cpx)
                     if not self._is_multiobj():
                         cpx_miprelgap = cpx.solution.MIP.get_mip_relative_gap()
-                        cpx_bestbound = cpx.solution.MIP.get_best_objective()
                     else:
                         cpx_miprelgap = cpx_bestbound = self.get_infinity()
 
