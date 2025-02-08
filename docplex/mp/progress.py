@@ -63,7 +63,7 @@ _TProgressData_ = namedtuple('_TProgressData',
 
 # noinspection PyUnresolvedReferences
 class ProgressData(_TProgressData_):
-    """ A named tuple class to hold progress data, as reeived from CPLEX.
+    """ A named tuple class to hold progress data, as received from CPLEX.
 
     Attributes:
         has_incumbent: a boolean, indicating whether an incumbent solution is available (or not),
