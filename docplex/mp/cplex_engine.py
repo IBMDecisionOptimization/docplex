@@ -21,6 +21,7 @@ from docplex.mp.utils import DOcplexException, is_string
 from docplex.mp.constants import ConflictStatus
 from docplex.mp.constr import IndicatorConstraint, RangeConstraint, BinaryConstraint, \
     EquivalenceConstraint
+from docplex.mp.format import ExchangeFormat
 from docplex.mp.progress import ProgressData
 from docplex.mp.qprogress import QProgressData
 from docplex.mp.solution import SolveSolution, SolutionPool
@@ -2548,6 +2549,9 @@ class CplexEngine(IEngine):
         return ConflictRefinerResult(conflicts, refined_by=self.name)
 
     def export(self, out, exchange_format):
+        if exchange_format is not None and not isinstance(exchange_format, ExchangeFormat):
+            self._model.fatal("Not a valid  exchange format: {0}", exchange_format)
+
         self.sync_cplex()
         if is_string(out):
             path = out
@@ -2564,7 +2568,7 @@ class CplexEngine(IEngine):
                 else:
                     raise DOcplexException("CPLEX error in SAV export: {0!s}", cpx_se)
         else:
-            # assume a file-like object
+            # delegate to cplex, assume write and close methods.
             filetype = exchange_format.filetype
             return self._cplex.write_to_stream(out, filetype)
 
