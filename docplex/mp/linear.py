@@ -1380,7 +1380,8 @@ class ConstantExpr(_SubscriptionMixin, AbstractLinearExpr):
         return self + (-e)
 
     def to_string(self, nb_digits=None, use_space=False):
-        return '{0}'.format(self._constant)
+        actual_nb_digits = self.model.float_precision if nb_digits is None else nb_digits
+        return f"{self._constant:.{actual_nb_digits}g}"
 
     def to_stringio(self, oss, nb_digits, use_space, var_namer=lambda v: v.name):
         self._num_to_stringio(oss, self._constant, nb_digits)
