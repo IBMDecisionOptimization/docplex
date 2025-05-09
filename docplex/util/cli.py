@@ -66,7 +66,7 @@ except ModuleNotFoundError as e:
     # way of unloading the 'cplex' module and since we will copy
     # a new shared object over the already loaded one, leaving the
     # cplex module loaded can create a segmentation fault.
-    out = subprocess.run(["python", "-c", sub_program], capture_output=True)
+    out = subprocess.run([sys.executable, "-c", sub_program], capture_output=True)
     if out.returncode == 0:
         stdout = out.stdout.decode("utf-8").strip().split(" ")
         if stdout[0] != "Error:":
@@ -77,6 +77,10 @@ except ModuleNotFoundError as e:
 def copy_so(cos):
     cos = os.path.realpath(cos)
     pcplex, version = get_cplex_info()
+
+    if version is None:
+        print("ERROR: did not find 'cplex' package")
+        return
 
     version_mneumonic = "".join(version.split(".")[:3])
     so_name = get_so_name(version_mneumonic)
