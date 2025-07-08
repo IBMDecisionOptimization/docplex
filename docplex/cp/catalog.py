@@ -268,7 +268,7 @@ class CpoOperation(object):
         self.cpo_name = cpname
         self.python_name = pyname
         self.priority = prio
-        if kwrd:
+        if kwrd is not None:
             self.keyword = kwrd
         else:
             self.keyword = cpname
@@ -571,8 +571,8 @@ Oper_less_or_equal               = CpoOperation("lessOrEqual", "less_or_equal", 
                                                                                            CpoSignature(Type_Constraint, (Type_PositiveInt, Type_CumulExpr)),
                                                                                            CpoSignature(Type_Constraint, (Type_CumulExpr, Type_IntExpr)),
                                                                                            CpoSignature(Type_Constraint, (Type_IntExpr, Type_CumulExpr))) )
-Oper_lexicographic               = CpoOperation("lexicographic", "lexicographic", None, -1, ( CpoSignature(Type_Constraint, (Type_IntExprArray, Type_IntExprArray)),) )
-Oper_strict_lexicographic        = CpoOperation("strictLexicographic", "strict_lexicographic", None, -1, ( CpoSignature(Type_Constraint, (Type_IntExprArray, Type_IntExprArray)),) )
+Oper_lexicographic               = CpoOperation("lexicographic", "lexicographic", None, -1, ( CpoSignature(Type_BoolExpr, (Type_IntExprArray, Type_IntExprArray)),) )
+Oper_strict_lexicographic        = CpoOperation("strictLexicographic", "strict_lexicographic", None, -1, ( CpoSignature(Type_BoolExpr, (Type_IntExprArray, Type_IntExprArray)),) )
 Oper_log                         = CpoOperation("log", "log", None, -1, ( CpoSignature(Type_FloatExpr, (Type_FloatExpr,)),) )
 Oper_logical_and                 = CpoOperation("and", "logical_and", "&&", 7, ( CpoSignature(Type_BoolExpr, (Type_BoolExpr, Type_BoolExpr)),
                                                                                  CpoSignature(Type_BoolExpr, (Type_BoolExprArray,)),) )

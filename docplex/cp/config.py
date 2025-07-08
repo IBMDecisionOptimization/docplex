@@ -4,7 +4,7 @@
 # (c) Copyright IBM Corp. 2015 - 2022
 # --------------------------------------------------------------------------
 
-"""
+r"""
 Configuration of the CP Optimizer Python API
 
 This module is the top-level handler of the configuration parameters for

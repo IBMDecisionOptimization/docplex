@@ -1735,7 +1735,7 @@ def lexicographic(x, y):
     x = _convert_arg(x, "x", Type_IntExprArray)
     y = _convert_arg(y, "y", Type_IntExprArray)
     _check_same_size_arrays(x, y)
-    return CpoFunctionCall(Oper_lexicographic, Type_Constraint, (x, y))
+    return CpoFunctionCall(Oper_lexicographic, Type_BoolExpr, (x, y))
 
 
 def strict_lexicographic(x, y):
@@ -1762,7 +1762,7 @@ def strict_lexicographic(x, y):
     x = _convert_arg(x, "x", Type_IntExprArray)
     y = _convert_arg(y, "y", Type_IntExprArray)
     _check_same_size_arrays(x, y)
-    return CpoFunctionCall(Oper_strict_lexicographic, Type_Constraint, (x, y))
+    return CpoFunctionCall(Oper_strict_lexicographic, Type_BoolExpr, (x, y))
 
 
 def standard_deviation(x, meanLB=NEGATIVE_INFINITY, meanUB=POSITIVE_INFINITY):

@@ -63,7 +63,7 @@ _TProgressData_ = namedtuple('_TProgressData',
 
 # noinspection PyUnresolvedReferences
 class ProgressData(_TProgressData_):
-    """ A named tuple class to hold progress data, as received from CPLEX.
+    """ A named tuple class to hold progress data, as reeived from CPLEX.
 
     Attributes:
         has_incumbent: a boolean, indicating whether an incumbent solution is available (or not),
@@ -93,7 +93,7 @@ class ProgressClock(Enum):
 
         - All: the listener listens to all calls from CPLEX.
         - BestBound: listen to changes in best bound, not necessarily with a solution present.
-        - Solutions: listen to all intermediate solutions, not necessarily improving.
+        - Solutions: listen to all intermediate solutions, not necessarily impriving.
             Nothing prevents being called several times with an identical solution.
 
         - Gap: listen to intermediate solutions, where either objective or best bound has improved.

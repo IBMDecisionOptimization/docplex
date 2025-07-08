@@ -69,7 +69,7 @@ class LpTokenizer(Tokenizer):
     __slots__ = ()
 
     def __init__(self, **args):
-        """ Create a new tokenizer
+        r""" Create a new tokenizer
         Args:
             See arguments list of :class:`~docplex.cp.utils.Tokenizer`
         """
@@ -201,7 +201,7 @@ class LpTokenizer(Tokenizer):
 
 
     def _read_antislash(self):
-        """ Read token starting by \ """
+        r""" Read token starting by \ """
         self._skip_to_end_of_line()
         return Token(TOKEN_TYPE_COMMENT, None if self.skip_comments else self._get_token()[:-1])
 

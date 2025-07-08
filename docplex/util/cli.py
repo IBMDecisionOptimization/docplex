@@ -11,11 +11,11 @@
 # --------------------------------------------------------------------------
 import sys
 import os
-import distutils.ccompiler
 import subprocess
 import shutil
 import glob
 import argparse
+import sysconfig
 
 
 
@@ -34,8 +34,12 @@ def get_cpo_name(version):
 
 
 def get_so_name(version):
-    ext = distutils.ccompiler.new_compiler().shared_lib_extension
-    if sys.platform == "darwin" : ext = ".dylib"
+    if sys.platform == "darwin":
+        ext = ".dylib"
+    elif sys.platform == "win32":
+        ext = ".dll"
+    else:
+        ext = ".so"
     prefix = "" if sys.platform == "win32" else "lib"
     return "{}cplex{}{}".format(prefix, version, ext)
 
@@ -58,7 +62,7 @@ try:
     import cplex
     print(cplex.__path__[0], cplex.__version__)
 except ModuleNotFoundError as e:
-    print('Error: could not import module \"cplex\"')
+    raise
 
     """
 
@@ -66,12 +70,13 @@ except ModuleNotFoundError as e:
     # way of unloading the 'cplex' module and since we will copy
     # a new shared object over the already loaded one, leaving the
     # cplex module loaded can create a segmentation fault.
-    out = subprocess.run(["python", "-c", sub_program], capture_output=True)
+    out = subprocess.run([sys.executable, "-c", sub_program], capture_output=True)
     if out.returncode == 0:
         stdout = out.stdout.decode("utf-8").strip().split(" ")
-        if stdout[0] != "Error:":
-            return stdout[0], stdout[1]
-    return None, None
+        return stdout[0], stdout[1]
+    else:
+        error_message = out.stderr.decode("utf-8").strip()
+        raise Exception(f"Failed to retrieve cplex module path or version: {error_message}")
 
 
 def copy_so(cos):
@@ -126,7 +131,8 @@ def copy_so(cos):
     try:
         for s, t in copies:
             print("    {} -> {}".format(s, t))
-            shutil.copyfile(s, t)
+            os.remove(t)
+            shutil.copy2(s, t)
     except EnvironmentError as e:
         print("ERROR: Could not upgrade packages due to an EnvironmentError: {}".format(e))
         print("Consider using the `--user` option or check the permissions.")
