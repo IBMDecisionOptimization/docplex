@@ -487,7 +487,8 @@ class StandardTypeChecker(DOcplexLoggerTypeChecker):
         elif not (arg is None and accept_none):
             s_caller = resolve_caller_as_string(caller)
             qualifier = "non-empty " if not accept_empty else ""
-            self.fatal("{0}Expecting a {2}string, got: {1!r}", s_caller, arg, qualifier)
+            s_none = " or None" if accept_none else ""
+            self.fatal("{0}Expecting a {2}string{3}, got: {1!r}", s_caller, arg, qualifier, s_none)
 
     def typecheck_string_seq(self, arg, accept_empty=False, accept_none=False, caller=''):
         checked_strings = list(arg)

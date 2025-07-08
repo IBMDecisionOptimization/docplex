@@ -30,7 +30,7 @@ import traceback
 MIN_CPO_VERSION_NUMBER = "12.6.0.0"
 
 # Maximum CPO format version number
-MAX_CPO_VERSION_NUMBER = "21.10.0.0"
+MAX_CPO_VERSION_NUMBER = "22.1.2.0"
 
 # Map of all operators. Key is operator, value is list of corresponding operation descriptors
 _ALL_OPERATORS = {}
@@ -806,9 +806,9 @@ class CpoParser(object):
                         if compare_natural(ver, MIN_CPO_VERSION_NUMBER) < 0:
                             raise CpoUnsupportedFormatVersionException("Can not parse a CPO file with version {}, lower than {}"
                                                                        .format(ver, MIN_CPO_VERSION_NUMBER))
-                        if compare_natural(ver, MAX_CPO_VERSION_NUMBER) > 0:
-                            raise CpoUnsupportedFormatVersionException("Can not parse a CPO file with version {}, greater than {}"
-                                                                       .format(ver, MAX_CPO_VERSION_NUMBER))
+                        # if compare_natural(ver, MAX_CPO_VERSION_NUMBER) > 0:
+                        #    raise CpoUnsupportedFormatVersionException("Can not parse a CPO file with version {}, greater than {}"
+                        #                                               .format(ver, MAX_CPO_VERSION_NUMBER))
                 self._check_token(self._next_token(), TOKEN_PARENT_CLOSE)
             tok = self._next_token()
 

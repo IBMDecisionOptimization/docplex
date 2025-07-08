@@ -404,7 +404,7 @@ class CpoCompiler(object):
                 if isinstance(expr, CpoAlias):
                     # Simple alias
                     out.write(name + u" = " + self._compile_expression(expr.expr, False) + u";\n")
-                elif isroot and expr.type in (Type_Constraint, Type_SearchPhase, Type_BoolExpr):
+                elif isroot and expr.type in (Type_Constraint, Type_SearchPhase, Type_BoolExpr, Type_Objective):
                     # Named constraint
                     if self.is_format_at_least_12_8:
                         out.write(name + u": " + self._compile_expression(expr, True) + u";\n")
@@ -557,10 +557,12 @@ class CpoCompiler(object):
                             estack[-1] = [res, 0, False]
                             continue
 
-                        cout.append(self._get_id_string(oper.keyword))
-                        cout.append("(")
+                        if len(oper.keyword) > 0:
+                            cout.append(self._get_id_string(oper.keyword))
+                            cout.append("(")
                     if cnx >= oplen:
-                        cout.append(")")
+                        if len(oper.keyword) > 0:
+                            cout.append(")")
                         estack.pop()
                     else:
                         edscr[1] += 1

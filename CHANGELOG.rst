@@ -1,8 +1,21 @@
 Changelog
 ---------
 
-Changed in 2.29.241:
+Changed in 2.30.251:
 ````````````````````
+* Fix for SyntaxWarning: invalid escape sequence when running with Python version > 3.12.
+* Replace the deprecated usage of 'strtobool' with Python >= 3.12
+* modeller.constant(x) function creates an unhandled constant(x) in .cpo file
+* docplex config --upgrade requires setuptools with Python >= 3.12
+* docplex config --upgrade retrieves python executable
+* Conda SafetyError on reinstalling with conda install cplex after a docplex config --upgrade
+* C-style comments not allowed inside """ ... """ in some Python 3.12 versions
+* Replace the deprecated usage of strtobool
+* Fix export crash when an incorrect format is passed
+* Report best bound in solve details even if no integer solution has been found
+
+Changed in 2.29.245 (2025.04):
+``````````````````````````````
 
 * each record of a solve history use a unique timestamp for its fields
 

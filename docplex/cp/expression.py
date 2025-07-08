@@ -2186,7 +2186,13 @@ def _domain_iterator(d):
     if isinstance(d, (tuple, list)):
         for x in d:
             if isinstance(x, (list, tuple)):
-                min, max = x
+                # test changes
+                assert len(x) == 2 or (len(x) == 3 and x[2] == "holes")
+                min, max = x[:2]
+                # if len(x)>2:
+                #    min, max = x[0],x[1] 
+                # else:
+                # min, max = x
                 if min == max:
                     yield min
                 else:

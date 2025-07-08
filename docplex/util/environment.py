@@ -1089,7 +1089,7 @@ attachment_trans_table = maketrans(attachment_invalid_characters, '_' * len(atta
 
 
 def make_attachment_name(name):
-    '''From `name`, create an attachment name that is correct for DOcplexcloud.
+    r'''From `name`, create an attachment name that is correct for DOcplexcloud.
 
     Attachment filenames in DOcplexcloud has certain restrictions. A file name:
 

@@ -1776,7 +1776,7 @@ class CpoSolveResult(CpoRunResult):
 
 
     def get_objective_gaps(self):
-        """ Gets the numeric values of the gap between objective value and objective bound.
+        r""" Gets the numeric values of the gap between objective value and objective bound.
 
         For a single objective, gap is calculated as gap = \|value - bound\| / max(1e-10, \|value\|)
 
@@ -1792,7 +1792,7 @@ class CpoSolveResult(CpoRunResult):
 
 
     def get_objective_gap(self):
-        """ Gets the numeric values of the gap between the first objective value and objective bound.
+        r""" Gets the numeric values of the gap between the first objective value and objective bound.
 
         For a single objective, gap is calculated as gap = \|value - bound\| / max(1e-10, \|value\|)
 
