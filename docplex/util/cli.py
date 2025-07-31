@@ -83,6 +83,10 @@ def copy_so(cos):
     cos = os.path.realpath(cos)
     pcplex, version = get_cplex_info()
 
+    if version is None:
+        print("ERROR: did not find 'cplex' package")
+        return
+
     version_mneumonic = "".join(version.split(".")[:3])
     so_name = get_so_name(version_mneumonic)
     cpo_name = get_cpo_name(version_mneumonic)
