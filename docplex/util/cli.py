@@ -3,13 +3,14 @@
 # ---------------------------------------------------------------------------
 # Licensed Materials - Property of IBM
 # 5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5655-Y21
-# Copyright IBM Corporation 2023, 2024. All Rights Reserved.
+# Copyright IBM Corporation 2023, 2025. All Rights Reserved.
 #
 # US Government Users Restricted Rights - Use, duplication or
 # disclosure restricted by GSA ADP Schedule Contract with
 # IBM Corp.
 # --------------------------------------------------------------------------
 import sys
+import json
 import os
 import subprocess
 import shutil
@@ -60,7 +61,9 @@ def get_cplex_info():
     sub_program = """
 try:
     import cplex
-    print(cplex.__path__[0], cplex.__version__)
+    import json
+    info = {"path": cplex.__path__[0], "version": cplex.__version__}
+    print(json.dumps(info))
 except ModuleNotFoundError as e:
     raise
 
@@ -72,8 +75,7 @@ except ModuleNotFoundError as e:
     # cplex module loaded can create a segmentation fault.
     out = subprocess.run([sys.executable, "-c", sub_program], capture_output=True)
     if out.returncode == 0:
-        stdout = out.stdout.decode("utf-8").strip().split(" ")
-        return stdout[0], stdout[1]
+        return json.loads(out.stdout.decode("utf-8"))
     else:
         error_message = out.stderr.decode("utf-8").strip()
         raise Exception(f"Failed to retrieve cplex module path or version: {error_message}")
@@ -81,22 +83,29 @@ except ModuleNotFoundError as e:
 
 def copy_so(cos):
     cos = os.path.realpath(cos)
-    pcplex, version = get_cplex_info()
+    pycplex = get_cplex_info()
 
-    version_mneumonic = "".join(version.split(".")[:3])
+    version_mneumonic = "".join(pycplex["version"].split(".")[:3])
     so_name = get_so_name(version_mneumonic)
     cpo_name = get_cpo_name(version_mneumonic)
 
-    target_bindir = os.path.dirname(sys.executable)
-    target_root = os.path.dirname(target_bindir)
+    # Search cplex binaries in the bin and site-packages directories of the current Python environment
+    targets_path: list[str] = [sysconfig.get_path('purelib'), os.path.dirname(sys.executable)]
+    if sys.platform == "darwin":
+        targets_path.append(os.path.join(os.path.dirname(sys.executable), "Contents", "MacOS"))
 
-    so_targets = [t for t in glob.glob("{}/**/{}".format(target_root, so_name), recursive=True)]
-    cpo_targets = [t for t in glob.glob("{}/**/{}".format(target_root, cpo_name), recursive=True)]
+    so_targets: list[str] = []
+    cpo_targets: list[str] = []
+
+    for target_dir in targets_path:
+        so_targets.extend(glob.glob("{}/**/{}".format(target_dir, so_name), recursive=True))
+        cpo_targets.extend(glob.glob("{}/**/{}".format(target_dir, cpo_name), recursive=True))
+
     if len(so_targets) == 0:
-        print("ERROR: did not find shared object file {} in {}".format(so_name, target_root))
+        print("ERROR: did not find shared object file {} in {}".format(so_name, targets_path))
         return 1
     if len(cpo_targets) == 0:
-        print("ERROR: did not find executable file {} in {}".format(cpo_name, target_root))
+        print("ERROR: did not find executable file {} in {}".format(cpo_name, targets_path))
         return 1
 
     #

@@ -1,8 +1,15 @@
 Changelog
 ---------
 
-Changed in 2.30.251:
+Changed in 2.31.254:
 ````````````````````
+
+* Fix import_model() misparses logical operators (or, and) as ||(), &&()
+* Fix docplex config --upgrade search path for installed binaries
+
+Changed in 2.30.251 (2025.07):
+``````````````````````````````
+
 * Fix for SyntaxWarning: invalid escape sequence when running with Python version > 3.12.
 * Replace the deprecated usage of 'strtobool' with Python >= 3.12
 * modeller.constant(x) function creates an unhandled constant(x) in .cpo file
