@@ -85,6 +85,14 @@ import time
 import copy
 import types
 from collections import OrderedDict
+import re
+import ast
+import subprocess
+import tempfile
+import os
+from hashable_list import HashableList
+from ordered_set import OrderedSet
+import warnings
 
 
 
@@ -1797,6 +1805,218 @@ class CpoModel(object):
                 doneset.add(eid)
                 estack.extend(e.children)
         return None
+
+
+    def get_opl_var(self):
+        variable_names = [var.get_name() for var in self.get_all_variables()]
+        variables_itself = [var for var in self.get_all_variables()]
+        decision_vars = {}
+        for var_name, var in zip(variable_names,variables_itself):
+            base_match = re.match(r"^([a-zA-Z_]\w*)", var_name)
+            if not base_match or base_match.group(1) == var_name:
+                s_modified = re.sub(r'[^a-zA-Z0-9]', '_', var_name)
+                decision_vars[s_modified] = var
+                continue
+            base = base_match.group(1)
+            calls_str = var_name[len(base):]
+            try:
+                expr = ast.parse(f"x{calls_str}", mode='eval').body
+                args_list = []
+                while isinstance(expr, ast.Call):
+                    call_args = []
+                    for arg in expr.args:
+                        call_args.append(ast.literal_eval(arg))
+                    args_list.insert(0, call_args)
+                    expr = expr.func
+            except Exception as e:
+                print(f"Failed to parse:  -- {e}")
+                continue
+            current = decision_vars.setdefault(base, {})
+            for args in args_list[:-1]:
+                key = args[0] if len(args) == 1 else tuple(args)
+                current = current.setdefault(key, {})
+            last_key = args_list[-1][0] if len(args_list[-1]) == 1 else tuple(args_list[-1])
+            current[last_key] = var
+        class DictToObj(dict):
+            def __init__(self, dictionary):
+                self.var_dict = dictionary
+                super().__init__(dictionary)
+                for key, value in dictionary.items():
+                    setattr(self, key, value)
+                setattr(self, 'variable_names', list(dictionary))
+            def from_solution(self,sol):
+                sol_dict = {}
+                stack = [(self.var_dict, sol_dict)]
+                while stack:
+                    src, dst = stack.pop()
+                    for key, val in src.items():
+                        if isinstance(val, dict):
+                            dst[key] = {}
+                            stack.append((val, dst[key])) 
+                        else:
+                            dst[key] = sol.get_value(val)
+                class DictToObjVal(dict):
+                    def __init__(self, dictionary):
+                        super().__init__(dictionary)
+                        for key, value in dictionary.items():
+                            setattr(self, key, value)
+                        setattr(self, 'variable_names', list(dictionary))
+                return DictToObjVal(sol_dict)
+        return DictToObj(decision_vars)
+
+
+    def build_opl_model(self, mod, data = None, **kwargs):
+        mod_string_str = mod
+        assert mod is not None
+        self.dat_Str = ''
+        def freeze(d):
+            if isinstance(d, OrderedSet):
+                return d
+            elif isinstance(d, set) or isinstance(d, frozenset):
+                warnings.warn(
+                        f"Avoid using built-in `set` or `{{}}`. Found: {d}. "
+                        f"Use `OrderedSet` instead, as it maintains order",
+                        UserWarning
+                    )
+                return frozenset([freeze(elem) for elem in d])
+            elif isinstance(d, dict):
+                return { freeze(k) : freeze(v) for k,v in d.items() }
+            elif isinstance(d, list) or isinstance(d, HashableList):
+                return HashableList([freeze(elem) for elem in d])
+            elif isinstance(d, tuple):
+                return tuple([freeze(elem) for elem in d])
+            else:
+                return d
+        def format_value(val):
+            if isinstance(val, str):
+                return f'"{val}"'
+            elif isinstance(val, bool):
+                return "true" if val else "false"
+            elif isinstance(val, (int, float)):
+                return str(val)
+            elif isinstance(val,set) or isinstance(val,frozenset) or isinstance(val,OrderedSet):
+                return "{" + ", ".join(map(format_value, val)) + "}"
+            elif isinstance(val,list) or isinstance(val, HashableList):
+                return "[" + ", ".join(map(format_value, val)) + "]"
+            elif isinstance(val,dict):
+                entries = [f'{format_value(k)}: {format_value(v)}' for k, v in val.items()]
+                return "#[" + ", ".join(entries) + "]#"
+            elif isinstance(val,tuple):
+                return "<" + ", ".join(map(format_value, val)) + ">"
+            else:
+                raise TypeError(f"Unsupported type: {type(val)}")
+        def make_data(data):
+            dat_lines = []
+            for k, v in data.items():
+                dat_lines.append(f"{k} = {format_value(v)};")
+            return "\n".join(dat_lines)
+        def get_line(s, i):
+            t = s.splitlines()
+            if i < len(t):
+                return t[i]
+            return None
+        if data is None and len(kwargs)==0:
+            dat_string = None
+        elif isinstance(data, str):
+            if os.path.isfile(data):
+                with open(data, 'r') as f:
+                    dat_string = f.read()
+            elif (os.path.sep in data and len(data.strip().splitlines()) == 1) or data.endswith('.dat'):
+                raise FileNotFoundError(f"Wrong path or file name: {data}")
+            else:
+                dat_string = data
+        else:
+            if len(kwargs)!=0:
+                if data is None: data = {}
+                elif not isinstance(data, dict): raise TypeError(f"Expected data to be a dict, but got {type(data).__name__}")
+                else: data = dict(data)
+                data.update(kwargs)
+            if not isinstance(data, dict): raise TypeError(f"Expected data to be a dict, but got {type(data).__name__}")
+            dat_string = make_data(freeze(data))
+        if os.path.isfile(mod_string_str):
+            with open(mod_string_str, 'r') as f:
+                mod_string = f.read()
+        elif (os.path.sep in mod_string_str and len(mod_string_str.strip().splitlines()) == 1) or mod_string_str.endswith('.mod'):
+            raise FileNotFoundError(f"Wrong path or file name: {mod_string_str}")
+        else:
+            mod_string = mod_string_str
+        with tempfile.NamedTemporaryFile(suffix=".cpo", delete=False) as cpo_file:
+            with tempfile.NamedTemporaryFile(suffix=".mod", delete=False) as mod_file:
+                with tempfile.NamedTemporaryFile(suffix=".dat", delete=False) as dat_file:
+                    mod_file.write(mod_string.encode("utf-8"))
+                    # print(dat_string)
+                    if dat_string is not None:
+                        dat_file.write(dat_string.encode("utf-8"))
+                    mod_file.flush()
+                    dat_file.flush()
+                    env = os.environ.copy()
+                    if dat_string is not None:
+                        command = ['oplcpolpgen',"-XdumpConsistent","-e", cpo_file.name,mod_file.name,dat_file.name]
+                        self.dat_Str = dat_string
+                    else:
+                        command = ['oplcpolpgen',"-XdumpConsistent","-e", cpo_file.name,mod_file.name]
+                    cp = subprocess.run(command,env=env, capture_output=True, text=True)
+        if cp.returncode == 0:
+            self.import_model(cpo_file.name)
+            try:
+                for f in (cpo_file.name, mod_file.name, dat_file.name):
+                    os.remove(f)
+            except:
+                pass
+        else:
+            try:
+                for f in (cpo_file.name, mod_file.name, dat_file.name):
+                    os.remove(f)
+            except:
+                pass
+            output = cp.stdout
+            if output == '':
+                output = cp.stderr
+            else:
+                # print(output)
+                # Try to find the line number information
+                # example: *** ERROR[PARSE_001] at 19:7-15 ...
+                m = re.search('^... ERROR.*at ([1-9][0-9]*):([1-9][0-9]*)-([1-9][0-9]*)',
+                            output, re.MULTILINE)
+                if m is not None:
+                    lineno_str = m.group(1)
+                    left_str = m.group(2)
+                    right_str = m.group(3)
+                    try:
+                        lineno = int(lineno_str)
+                        left = int(left_str)
+                        right = int(right_str)
+                        line = get_line(mod_string, lineno - 1)
+                        if line is not None:
+                            output += "\nInitial error occurs on line {}:\n".format(lineno)
+                            output += "   " + line + "\n"
+                            output += (" " * (2 + left)) + ("^" * (right - left))
+                    except:
+                        pass    
+            raise RuntimeError(output)
+    
+    def export_dat(self, path=''):
+        def validate_path(filepath: str):
+            """Ensure the directory exists and path is writable."""
+            dir_path = os.path.dirname(filepath) or "."
+            if not os.path.exists(dir_path):
+                raise FileNotFoundError(f"Directory does not exist: {dir_path}")
+            if not os.access(dir_path, os.W_OK):
+                raise PermissionError(f"No write permission for directory: {dir_path}")
+            if os.path.isdir(filepath):
+                raise IsADirectoryError(f"Path is a directory, not a file: {filepath}")
+            if not filepath.lower().endswith('.dat'):
+                raise ValueError(f"File must have '.dat' extension: {filepath}")
+        if path!='':
+            validate_path(path)
+            if self.dat_Str == '':
+                print('dat is empty')
+            else:
+                with open(path, 'w', encoding='utf-8') as dfff:
+                    dfff.write(self.dat_Str)
+                print("Data file generated: ",path)
+        else:
+            print(self.dat_Str)
 
 
     def _get_calling_location(self):

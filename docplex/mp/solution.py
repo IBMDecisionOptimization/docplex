@@ -831,8 +831,8 @@ class SolveSolution(object):
         Note: The model must be solved successfully before calling this method.
 
         :param dvars: a sequence of variables.
-        :return: a list of tuples, in the same order as the variable sequence. Each tuple contains 3 tuples: the lower lower_bounds, the upper_bounds and the objective
-        For example [((-1e+20, 2.5), (-3.0, 5.0), (-1e+20, -2.0), (0.0, 4.0)), ((-1e+20, 2.5), (-3.0, 5.0), (-1e+20, -2.0), (0.0, 4.0))]
+        :return: a list of tuples, in the same order as the variable sequence. Each tuple contains 3 tuples: the lower lower_bounds, the upper_bounds and the objective.
+            For example [((-1e+20, 2.5), (-3.0, 5.0), (-1e+20, -2.0), (0.0, 4.0)), ((-1e+20, 2.5), (-3.0, 5.0), (-1e+20, -2.0), (0.0, 4.0))]
         """
         ret = [None for d in dvars]
         idx = {d : i for i,d in enumerate(dvars)}

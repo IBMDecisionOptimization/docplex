@@ -807,8 +807,9 @@ class ObjectCacheById(object):
     This object allows to associate an object to a key.
     It is implemented using a dict that uses the id of the key as dict key.
     This allows to:
-     * Use any Python object as key, even if it does not implement __hash__() function,
-     * Use different key objects that are logically equal
+
+    * Use any Python object as key, even if it does not implement __hash__() function,
+    * Use different key objects that are logically equal
 
     This cache is limited in size. This means that, if the max size is reached, adding a new
     object will remove the oldest.

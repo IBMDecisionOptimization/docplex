@@ -1445,7 +1445,7 @@ class CpoStateFunction(CpoVariable):
         """ Sets the transition matrix.
 
         Args:
-        trmtx : A transition matrix defining the transition distance between consecutive states of the state function.
+            trmtx: A transition matrix defining the transition distance between consecutive states of the state function.
                 Transition matrix is given as a list of rows (iterable of iterables of positive integers),
                 or as the result of a call to the method :meth:`~docplex.cp.expression.transition_matrix`.
         """

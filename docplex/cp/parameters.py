@@ -17,17 +17,17 @@ For the parameters that require special values, those values are given as consta
 Changing the value of a parameter can be done in multiple ways.
 For example, the `TimeLimit` can be set to 60s with:
 
-   * `params.TimeLimit = 60`
-   * `params.set_TimeLimit(60)`
-   * `params['TimeLimit'] = 60`
-   * `params.set_attribute('TimeLimit', 60)`
+* `params.TimeLimit = 60`
+* `params.set_TimeLimit(60)`
+* `params['TimeLimit'] = 60`
+* `params.set_attribute('TimeLimit', 60)`
 
 Retrieving the value of a parameter can be done in the same way using:
 
-   * `v = params.TimeLimit`
-   * `v = params.get_TimeLimit()`
-   * `v = params['TimeLimit']`
-   * `v = params.get_attribute('TimeLimit')`
+* `v = params.TimeLimit`
+* `v = params.get_TimeLimit()`
+* `v = params['TimeLimit']`
+* `v = params.get_attribute('TimeLimit')`
 
 If a parameter is not set, the value returned by the first two access forms is None.
 The last access form (element of a dictionary) raises an exception.
@@ -305,8 +305,8 @@ class CpoParameters(Context):
         """ **Constructor**
 
         This constructor takes a variable number of optional arguments that allow to set parameters directly.
-        For example:
-        ::
+        For example::
+
            myparams = CpoParameters(TimeLimit=20, LogPeriod=5000))
 
         Args:

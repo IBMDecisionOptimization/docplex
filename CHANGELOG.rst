@@ -1,8 +1,18 @@
 Changelog
 ---------
 
-Changed in 2.31.254:
+Changed in 2.32.257:
 ````````````````````
+
+* Added official support for Python 3.13 & 3.14
+* OPL Model Support from Python
+	1. Native OPL Integration in Python – Run and manage OPL models directly from docplex.mp and docplex.cp.
+	2. Python Data Support – Use dictionaries, lists, and pandas DataFrames instead of .dat files.
+	3. Structured Solution Access – Extract OPL variables and results in Python-friendly formats.
+	4. Automated Workflows – Seamlessly embed OPL model execution into end-to-end Python pipelines.
+
+Changed in 2.31.254 (2026.01):
+``````````````````````````````
 
 * Fix import_model() misparses logical operators (or, and) as ||(), &&()
 * Fix docplex config --upgrade search path for installed binaries
