@@ -19,10 +19,11 @@ This library is `numpy` friendly.
 
 `Documentation <http://ibmdecisionoptimization.github.io/docplex-doc/>`_
 
-`Examples <https://github.com/IBMDecisionOptimization/docplex-examples>`_
+`Examples <https://github.com/IBMDecisionOptimization/docplex/examples>`_
 
 Installation
 ------------
 
-*  ``pip install docplex``
+*  ``pip install cplex``
+* ``pip install docplex``
 

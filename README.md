@@ -11,16 +11,49 @@ This library is composed of 2 modules:
 * IBM&reg; Decision Optimization CPLEX Optimizer Modeling for Python - with namespace docplex.mp
 * IBM&reg; Decision Optimization CP Optimizer Modeling for Python - with namespace docplex.cp
 
-Solving with CPLEX requires that IBM&reg; ILOG CPLEX Optimization Studio V12.10 or later
-is installed on your machine.
-
 This library is numpy friendly.
 
-## Install the library
+## Prerequisites
 
+- **Python**: 3.7 or higher
+- **CPLEX Python API**: Community Edition or Full Version
+
+### Installing CPLEX Python API
+
+#### Quick Start with Community Edition
+
+The easiest way to get started is with the CPLEX Community Edition, which is installed automatically via pip:
+
+```bash
+pip install cplex
 ```
-   pip install docplex
+
+The Community Edition is free and suitable for learning and small-to-medium problems. However, it has limitations on problem size (1000 variables, 1000 constraints).
+
+**Note**: For larger problems or commercial use, you'll need the full version of CPLEX Optimization Studio or an academic license.
+
+#### Full Version Installation
+
+If you have IBM ILOG CPLEX Optimization Studio installed, you can install the Python API from the installation directory:
+
+```bash
+# Navigate to your CPLEX installation directory
+cd <CPLEX_INSTALL_DIR>/python
+
+# Install the package
+python setup.py install
 ```
+
+### DOcplex
+
+For a more Pythonic modeling experience, consider using [DOcplex](https://pypi.org/project/docplex/) (Decision Optimization CPLEX Modeling for Python):
+
+```bash
+pip install docplex
+```
+
+DOcplex provides a higher-level API and works with both CPLEX and IBM Decision Optimization on Cloud. See the [DOcplex examples repository](https://github.com/IBMDecisionOptimization/docplex-examples) for more information.
+
 
 ## Get the documentation and examples
 

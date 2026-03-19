@@ -24,6 +24,12 @@ from docplex.mp.quad import VarPair
 import os
 import xml.etree.ElementTree as ET
 import tempfile
+import subprocess
+import tempfile
+import re
+from hashable_list import HashableList
+from ordered_set import OrderedSet
+import warnings
 
 
 
@@ -820,7 +826,137 @@ class ModelReader(object):
         import warnings
         warnings.warn("ModelReader.read_model is deprecated, use class method ModelReader.read()", DeprecationWarning)
         return cls.read(filename, model_name, verbose, model_class, **kwargs)
-
+    
+    @classmethod
+    def build_opl_model(cls, mod, data = None, **kwargs):
+        mod_string_str = mod
+        assert mod is not None
+        def freeze(d):
+            if isinstance(d, OrderedSet):
+                return d
+            elif isinstance(d, set) or isinstance(d, frozenset):
+                warnings.warn(
+                        f"Avoid using built-in `set` or `{{}}`. Found: {d}. "
+                        f"Use `OrderedSet` instead, as it maintains order",
+                        UserWarning
+                    )
+                return frozenset([freeze(elem) for elem in d])
+            elif isinstance(d, dict):
+                return { freeze(k) : freeze(v) for k,v in d.items() }
+            elif isinstance(d, list) or isinstance(d, HashableList):
+                return HashableList([freeze(elem) for elem in d])
+            elif isinstance(d, tuple):
+                return tuple([freeze(elem) for elem in d])
+            else:
+                return d
+        def format_value(val):
+            if isinstance(val, str):
+                return f'"{val}"'
+            elif isinstance(val, bool):
+                return "true" if val else "false"
+            elif isinstance(val, (int, float)):
+                return str(val)
+            elif isinstance(val,set) or isinstance(val,frozenset) or isinstance(val,OrderedSet):
+                return "{" + ", ".join(map(format_value, val)) + "}"
+            elif isinstance(val,list) or isinstance(val, HashableList):
+                return "[" + ", ".join(map(format_value, val)) + "]"
+            elif isinstance(val,dict):
+                entries = [f'{format_value(k)}: {format_value(v)}' for k, v in val.items()]
+                return "#[" + ", ".join(entries) + "]#"
+            elif isinstance(val,tuple):
+                return "<" + ", ".join(map(format_value, val)) + ">"
+            else:
+                raise TypeError(f"Unsupported type: {type(val)}")
+        def make_data(data):
+            dat_lines = []
+            for k, v in data.items():
+                dat_lines.append(f"{k} = {format_value(v)};")
+            return "\n".join(dat_lines)
+        def get_line(s, i):
+            t = s.splitlines()
+            if i < len(t):
+                return t[i]
+            return None
+        if data is None and len(kwargs)==0:
+            dat_string = None
+        elif isinstance(data, str):
+            if os.path.isfile(data):
+                with open(data, 'r') as f:
+                    dat_string = f.read()
+            elif (os.path.sep in data and len(data.strip().splitlines()) == 1) or data.endswith('.dat'):
+                raise FileNotFoundError(f"Wrong path or file name: {data}")
+            else:
+                dat_string = data
+        else:
+            if len(kwargs)!=0:
+                if data is None: data = {}
+                elif not isinstance(data, dict): raise TypeError(f"Expected data to be a dict, but got {type(data).__name__}")
+                else: data = dict(data)
+                data.update(kwargs)
+            if not isinstance(data, dict): raise TypeError(f"Expected data to be a dict, but got {type(data).__name__}")
+            dat_string = make_data(freeze(data))
+        if os.path.isfile(mod_string_str):
+            with open(mod_string_str, 'r') as f:
+                mod_string = f.read()
+        elif (os.path.sep in mod_string_str and len(mod_string_str.strip().splitlines()) == 1) or mod_string_str.endswith('.mod'):
+            raise FileNotFoundError(f"Wrong path or file name: {mod_string_str}")
+        else:
+            mod_string = mod_string_str
+        if 'using CP;' in mod_string:
+            raise Exception("Cannot build CPLEX model, use docplex.cp.model.CpoModel.build_opl_model instead.")
+        with tempfile.NamedTemporaryFile(suffix=".lp", delete=False) as lp_file:
+            with tempfile.NamedTemporaryFile(suffix=".mod", delete=False) as mod_file:
+                with tempfile.NamedTemporaryFile(suffix=".dat", delete=False) as dat_file:
+                    mod_file.write(mod_string.encode("utf-8"))
+                    if dat_string is not None:
+                        dat_file.write(dat_string.encode("utf-8"))
+                    mod_file.flush()
+                    dat_file.flush()
+                    env = os.environ.copy()
+                    if dat_string is not None:
+                        command = ['oplcpolpgen',"-XdumpConsistent","-e", lp_file.name,mod_file.name,dat_file.name]
+                    else:
+                        command = ['oplcpolpgen',"-XdumpConsistent","-e", lp_file.name,mod_file.name]
+                    cp = subprocess.run(command, env=env, capture_output=True, text=True)
+        if cp.returncode == 0:
+            model = cls.read(filename=lp_file.name,model_class=Model,dat_Str = dat_string)
+            try:
+                for f in (lp_file.name, mod_file.name, dat_file.name):
+                    os.remove(f)
+            except:
+                pass
+            return model
+        else:
+            try:
+                for f in (lp_file.name, mod_file.name, dat_file.name):
+                    os.remove(f)
+            except:
+                pass
+            output = cp.stdout
+            if output == '':
+                output = cp.stderr
+            else:
+                # print(output)
+                # Try to find the line number information
+                # example: *** ERROR[PARSE_001] at 19:7-15 ...
+                m = re.search('^... ERROR.*at ([1-9][0-9]*):([1-9][0-9]*)-([1-9][0-9]*)',
+                            output, re.MULTILINE)
+                if m is not None:
+                    lineno_str = m.group(1)
+                    left_str = m.group(2)
+                    right_str = m.group(3)
+                    try:
+                        lineno = int(lineno_str)
+                        left = int(left_str)
+                        right = int(right_str)
+                        line = get_line(mod_string, lineno - 1)
+                        if line is not None:
+                            output += "\nInitial error occurs on line {}:\n".format(lineno)
+                            output += "   " + line + "\n"
+                            output += (" " * (2 + left)) + ("^" * (right - left))
+                    except:
+                        pass    
+            raise RuntimeError(output)
 
 def read_model(filename, model_name=None, verbose=False, **kwargs):
     """ Reads a model from a CPLEX export file.
@@ -853,3 +989,5 @@ def read_model(filename, model_name=None, verbose=False, **kwargs):
 
     """
     return ModelReader.read(filename, model_name=model_name, verbose=verbose, **kwargs)
+
+

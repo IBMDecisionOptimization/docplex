@@ -2906,19 +2906,19 @@ def no_overlap(sequence, distance_matrix=None, is_direct=None):
     If boolean flag *is_direct* is True, the transition distance holds between an interval and its immediate successor
     in the sequence.
     If *is_direct* is False (default), the transition distance holds between an interval and all its successors
-     in the sequence.
+    in the sequence.
 
     If the first argument is an array of interval variables, the two others are ignored.
 
     Args:
         sequence: A sequence variable, or an array of interval variables.
         distance_matrix (Optional): An optional transition matrix defining the transition distance between consecutive
-                         interval variables.
-                         Transition matrix is given as an iterable of iterables of positive integers,
-                         or as the result of a call to the method :meth:`~docplex.cp.expression.transition_matrix`.
+            interval variables.
+            Transition matrix is given as an iterable of iterables of positive integers,
+            or as the result of a call to the method :meth:`~docplex.cp.expression.transition_matrix`.
         is_direct (Optional): A boolean flag stating whether the distance specified in the transition matrix
-                 *distance_matrix* holds between direct successors (is_direct=True)
-                 or also between indirect successors (is_direct=False, default).
+            *distance_matrix* holds between direct successors (is_direct=True)
+            or also between indirect successors (is_direct=False, default).
     Returns:
         Constraint expression
     """

@@ -5,7 +5,7 @@
 # --------------------------------------------------------------------------
 
 # pylint: disable=too-many-lines
-import os
+import os,re,ast
 import sys
 import warnings
 from itertools import chain, product
@@ -316,6 +316,8 @@ class Model(object):
                 pass
             elif arg_name == "name_functional_vars":
                 self._name_functional_vars = bool(arg_val)
+            elif arg_name == 'dat_Str':
+                self.dat_Str = arg_val
             else:
                 self.warning("keyword argument: {0:s}={1!s} - is not recognized (ignored)", arg_name, arg_val)
 
@@ -1844,6 +1846,7 @@ class Model(object):
 
     def change_var_types(self, dvars, vartype_args, discard_incompatible_solution=True):
         """ Change  type for a collection of variables.
+
         :param dvars: an iterable on decision variables.
         :param vartype_args: either an iterable over variable types, or one single type.
         :param discard_incompatible_solution: boolean (default is True).
@@ -7275,5 +7278,83 @@ class Model(object):
     def _is_user_cut_constraint(self, lineart_ct):
         # INTERNAL
         return any(lc is lineart_ct for lc in self.iter_user_cut_constraints())
-
-
+    
+    def get_opl_var(self):
+        variable_names = [var.get_name() for var in self.iter_variables()]
+        variables_itself = [var for var in self.iter_variables()]
+        decision_vars = {}
+        for var_name, var in zip(variable_names,variables_itself):
+            base_match = re.match(r"^([a-zA-Z_]\w*)", var_name)
+            if not base_match or base_match.group(1) == var_name:
+                s_modified = re.sub(r'[^a-zA-Z0-9]', '_', var_name)
+                decision_vars[s_modified] = var
+                continue
+            base = base_match.group(1)
+            calls_str = var_name[len(base):]
+            try:
+                expr = ast.parse(f"x{calls_str}", mode='eval').body
+                args_list = []
+                while isinstance(expr, ast.Call):
+                    call_args = []
+                    for arg in expr.args:
+                        call_args.append(ast.literal_eval(arg))
+                    args_list.insert(0, call_args)
+                    expr = expr.func
+            except Exception as e:
+                print(f"Failed to parse:  -- {e}")
+                continue
+            current = decision_vars.setdefault(base, {})
+            for args in args_list[:-1]:
+                key = args[0] if len(args) == 1 else tuple(args)
+                current = current.setdefault(key, {})
+            last_key = args_list[-1][0] if len(args_list[-1]) == 1 else tuple(args_list[-1])
+            current[last_key] = var
+        class DictToObj(dict):
+            def __init__(self, dictionary):
+                self.var_dict = dictionary
+                super().__init__(dictionary)
+                for key, value in dictionary.items():
+                    setattr(self, key, value)
+                setattr(self, 'variable_names', list(dictionary))
+            def from_solution(self,sol):
+                sol_dict = {}
+                stack = [(self.var_dict, sol_dict)]
+                while stack:
+                    src, dst = stack.pop()
+                    for key, val in src.items():
+                        if isinstance(val, dict):
+                            dst[key] = {}
+                            stack.append((val, dst[key])) 
+                        else:
+                            dst[key] = sol.get_value(val)
+                class DictToObjVal(dict):
+                    def __init__(self, dictionary):
+                        super().__init__(dictionary)
+                        for key, value in dictionary.items():
+                            setattr(self, key, value)
+                        setattr(self, 'variable_names', list(dictionary))
+                return DictToObjVal(sol_dict)
+        return DictToObj(decision_vars)
+    
+    def export_dat(self, path=''):
+        def validate_path(filepath: str):
+            """Ensure the directory exists and path is writable."""
+            dir_path = os.path.dirname(filepath) or "."
+            if not os.path.exists(dir_path):
+                raise FileNotFoundError(f"Directory does not exist: {dir_path}")
+            if not os.access(dir_path, os.W_OK):
+                raise PermissionError(f"No write permission for directory: {dir_path}")
+            if os.path.isdir(filepath):
+                raise IsADirectoryError(f"Path is a directory, not a file: {filepath}")
+            if not filepath.lower().endswith('.dat'):
+                raise ValueError(f"File must have '.dat' extension: {filepath}")
+        if path!='':
+            validate_path(path)
+            if self.dat_Str == '':
+                print('dat is empty')
+            else:
+                with open(path, 'w', encoding='utf-8') as dfff:
+                    dfff.write(self.dat_Str)
+                print("Data file generated: ",path)
+        else:
+            print(self.dat_Str)

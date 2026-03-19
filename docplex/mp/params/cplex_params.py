@@ -13,10 +13,11 @@ from docplex.mp.params.parameter_hierarchy_20100 import make_root_params_20100
 from docplex.mp.params.parameter_hierarchy_22100 import make_root_params_22100
 from docplex.mp.params.parameter_hierarchy_22110 import make_root_params_22110
 from docplex.mp.params.parameter_hierarchy_22120 import make_root_params_22120
+from docplex.mp.params.parameter_hierarchy_22200 import make_root_params_22200
 
 
 def _make_default_parameters():
-    params = make_root_params_22110()
+    params = make_root_params_22200()
     return params
 
 
@@ -41,6 +42,8 @@ def get_params_from_cplex_version(cpx_version):
         return make_root_params_22110()
     elif cpx_version.startswith("22.1.2"):
         return make_root_params_22120()
+    elif cpx_version.startswith("22.2.0"):
+        return make_root_params_22200()
     else:
         params = _make_default_parameters()
         print(f"-- cannot find parameters matching version: {cpx_version}, using: {params.cplex_version}")

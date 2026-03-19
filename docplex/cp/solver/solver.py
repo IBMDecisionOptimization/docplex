@@ -1580,18 +1580,17 @@ def get_version_info():
     This method creates a CP solver using the default configuration parameters.
     It then retrieves this information, and close the solver.
     The returned value is a dictionary with various information, as in the
-    following example:
-    ::
+    following example::
 
-    {
-       "ProxyVersion" : 5,
-       "SourceDate" : "Sep 12 2017",
-       "SolverVersion" : "12.8.0.0",
-       "IntMin" : -9007199254740991,
-       "IntMax" : 9007199254740991,
-       "IntervalMin" : -4503599627370494,
-       "IntervalMax" : 4503599627370494,
-    }
+        {
+           "ProxyVersion" : 5,
+           "SourceDate" : "Sep 12 2017",
+           "SolverVersion" : "12.8.0.0",
+           "IntMin" : -9007199254740991,
+           "IntMax" : 9007199254740991,
+           "IntervalMin" : -4503599627370494,
+           "IntervalMax" : 4503599627370494,
+        }
 
     Returns:
         Solver information dictionary, or empty dictionary if not available.
