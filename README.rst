@@ -19,7 +19,7 @@ This library is `numpy` friendly.
 
 `Documentation <http://ibmdecisionoptimization.github.io/docplex-doc/>`_
 
-`Examples <https://github.com/IBMDecisionOptimization/docplex/examples>`_
+`Examples <https://github.com/IBMDecisionOptimization/docplex/tree/master/examples>`_
 
 Installation
 ------------
