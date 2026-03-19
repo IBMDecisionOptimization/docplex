@@ -52,7 +52,7 @@ For a more Pythonic modeling experience, consider using [DOcplex](https://pypi.o
 pip install docplex
 ```
 
-DOcplex provides a higher-level API and works with both CPLEX and IBM Decision Optimization on Cloud. See the [DOcplex examples repository](https://github.com/IBMDecisionOptimization/docplex-examples) for more information.
+DOcplex provides a higher-level API and works with both CPLEX and IBM Decision Optimization on Cloud. See the [DOcplex examples repository](https://github.com/IBMDecisionOptimization/docplex/examples) for more information.
 
 
 ## Get the documentation and examples
