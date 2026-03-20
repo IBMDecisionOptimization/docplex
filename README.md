@@ -17,15 +17,15 @@ This library is numpy friendly.
 
 - **Python**: 3.10 or (higher)
 
-### Installation
+## Installation
 
-consider using [DOcplex](https://pypi.org/project/docplex/) (Decision Optimization CPLEX Modeling for Python):
+- consider using [DOcplex](https://pypi.org/project/docplex/) (Decision Optimization CPLEX Modeling for Python):
 
 ```bash
 pip install docplex
 ```
 
-#### Installing CPLEX Python API
+### Installing CPLEX Python API
 
 #### Quick Start with Community Edition
 
@@ -39,7 +39,7 @@ The Community Edition is free and suitable for learning and small-to-medium prob
 
 **Note**: For larger problems or commercial use, you'll need the full version of CPLEX Optimization Studio or an academic license.
 
-#### Full Version Installation
+### Full Version Installation
 
 If you have IBM ILOG CPLEX Optimization Studio installed, you can install the Python API from the installation directory:
 
