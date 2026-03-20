@@ -25,7 +25,7 @@ This library is numpy friendly.
 pip install docplex
 ```
 
-### Installing CPLEX Python API
+- [Cplex](https://pypi.org/project/cplex/)
 
 ```bash
 pip install cplex
