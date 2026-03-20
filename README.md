@@ -15,10 +15,17 @@ This library is numpy friendly.
 
 ## Prerequisites
 
-- **Python**: 3.7 or higher
-- **CPLEX Python API**: Community Edition or Full Version
+- **Python**: 3.10 or (higher)
 
-### Installing CPLEX Python API
+### Installation
+
+consider using [DOcplex](https://pypi.org/project/docplex/) (Decision Optimization CPLEX Modeling for Python):
+
+```bash
+pip install docplex
+```
+
+#### Installing CPLEX Python API
 
 #### Quick Start with Community Edition
 
@@ -44,13 +51,14 @@ cd <CPLEX_INSTALL_DIR>/python
 python setup.py install
 ```
 
-### DOcplex
+If CPLEX is installed separately, configure DOcplex:
 
-For a more Pythonic modeling experience, consider using [DOcplex](https://pypi.org/project/docplex/) (Decision Optimization CPLEX Modeling for Python):
-
-```bash
-pip install docplex
 ```
+docplex config --upgrade <COS_INSTALL_DIR>
+```
+
+This ensures DOcplex correctly detects your CPLEX installation.
+
 
 DOcplex provides a higher-level API and works with both CPLEX and IBM Decision Optimization on Cloud. See the [DOcplex examples repository](https://github.com/IBMDecisionOptimization/docplex/tree/master/examples) for more information.
 
