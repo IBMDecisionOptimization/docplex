@@ -19,17 +19,13 @@ This library is numpy friendly.
 
 ## Installation
 
-- consider using [DOcplex](https://pypi.org/project/docplex/) (Decision Optimization CPLEX Modeling for Python):
+- [DOcplex](https://pypi.org/project/docplex/) (Decision Optimization CPLEX Modeling for Python):
 
 ```bash
 pip install docplex
 ```
 
 ### Installing CPLEX Python API
-
-#### Quick Start with Community Edition
-
-The easiest way to get started is with the CPLEX Community Edition, which is installed automatically via pip:
 
 ```bash
 pip install cplex
