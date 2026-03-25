@@ -70,14 +70,14 @@ By configuring [setup.cfg](https://github.com/IBMDecisionOptimization/docplex/bl
 -       packages = find:
 -       install_requires = six
 +package_dir =
-+       = /home/cdoens/Development/IBM/tmp/python-env-3.11/lib/python3.11/site-packages
++       = <myPythonEnvironmentPath>/lib/python<myPythonEnvironmentVersion>/site-packages
 +packages = find:
 +python_requires = >=3.7
 +install_requires = 
 +       six
 +
 +[options.packages.find]
-+where = /home/cdoens/Development/IBM/tmp/python-env-3.11/lib/python3.11/site-packages
++where = <myPythonEnvironmentPath>/lib/python<myPythonEnvironmentVersion>/site-packages
 +include = cplex*, docplex*
  
  [options.entry_points]
