@@ -58,6 +58,44 @@ This ensures DOcplex correctly detects your CPLEX installation.
 
 DOcplex provides a higher-level API and works with both CPLEX and IBM Decision Optimization on Cloud. See the [DOcplex examples repository](https://github.com/IBMDecisionOptimization/docplex/tree/master/examples) for more information.
 
+## Building a Combined docplex + cplex Wheel
+
+This section explains how to create a single Python wheel (.whl) that bundles both docplex and cplex packages, enabling simplified distribution and configuration.
+This approach is intended for advanced users who need to package an existing Python environment (for example, a virtual environment containing cplex) into a single wheel.
+
+By configuring [setup.cfg](https://github.com/IBMDecisionOptimization/docplex/blob/master/setup.cfg ), you can generate a single wheel that contains both packages.
+
+```
+ [options]
+-       packages = find:
+-       install_requires = six
++package_dir =
++       = /home/cdoens/Development/IBM/tmp/python-env-3.11/lib/python3.11/site-packages
++packages = find:
++python_requires = >=3.7
++install_requires = 
++       six
++
++[options.packages.find]
++where = /home/cdoens/Development/IBM/tmp/python-env-3.11/lib/python3.11/site-packages
++include = cplex*, docplex*
+ 
+ [options.entry_points]
+ console_scripts = 
+        docplex = docplex.util.cli:main
+```
+### Building the Wheel
+
+From the directory containing setup.cfg, run:
+```
+pip wheel .
+```
+
+The resulting wheel is fully compatible with:
+```
+docplex --config
+```
+which correctly detects and configures the bundled cplex.
 
 ## Get the documentation and examples
 
