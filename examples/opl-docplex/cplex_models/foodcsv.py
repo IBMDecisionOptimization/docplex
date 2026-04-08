@@ -20,7 +20,7 @@ OPL variables from the model.
 """
 
 from docplex.mp.model_reader import ModelReader
-from ordered_set import OrderedSet
+from docplex.util.collections import IndexedSet
 import pandas as pd
 
 
@@ -39,7 +39,7 @@ def main():
 
     data = {
         "NbMonths": 6,
-        "Products": OrderedSet(products_df),
+        "Products": IndexedSet(products_df),
         "Cost": {
             i + 1: cost_df.loc[i, products_df].tolist()
             for i in range(len(cost_df))

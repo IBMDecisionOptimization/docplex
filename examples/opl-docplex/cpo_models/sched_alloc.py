@@ -20,9 +20,9 @@ as keyword arguments. The example also shows how to retrieve OPL variables
 from the solved model.
 """
 
-from ordered_set import OrderedSet
 import pandas as pd
 from docplex.cp.model import CpoModel
+from docplex.util.collections import IndexedSet
 
 
 def main():
@@ -85,7 +85,7 @@ subject to {
 """
 
     data = {
-        "Tasks": OrderedSet([
+        "Tasks": IndexedSet([
             "masonry",
             "carpentry",
             "plumbing",
@@ -102,30 +102,30 @@ subject to {
 
         "start": [0, 7, 7, 7, 10, 10, 11, 15, 15, 17],
 
-        "Groups": OrderedSet(["g1", "g2", "g3"]),
+        "Groups": IndexedSet(["g1", "g2", "g3"]),
 
         "maxUnusedWorkers": [2, 1, 1],
 
         "mayperform": {
-            "masonry": OrderedSet(["g1", "g2"]),
-            "carpentry": OrderedSet(["g1", "g3"]),
-            "plumbing": OrderedSet(["g2"]),
-            "ceiling": OrderedSet(["g1", "g3"]),
-            "roofing": OrderedSet(["g1", "g3"]),
-            "painting": OrderedSet(["g2", "g3"]),
-            "windows": OrderedSet(["g1", "g3"]),
-            "facade": OrderedSet(["g1", "g2"]),
-            "garden": OrderedSet(["g1", "g2", "g3"]),
-            "moving": OrderedSet(["g1", "g3"]),
+            "masonry": IndexedSet(["g1", "g2"]),
+            "carpentry": IndexedSet(["g1", "g3"]),
+            "plumbing": IndexedSet(["g2"]),
+            "ceiling": IndexedSet(["g1", "g3"]),
+            "roofing": IndexedSet(["g1", "g3"]),
+            "painting": IndexedSet(["g2", "g3"]),
+            "windows": IndexedSet(["g1", "g3"]),
+            "facade": IndexedSet(["g1", "g2"]),
+            "garden": IndexedSet(["g1", "g2", "g3"]),
+            "moving": IndexedSet(["g1", "g3"]),
         },
     }
 
-    Workers = OrderedSet(["Thomas", "Brett", "Matthew", "Scott", "Bill"])
+    Workers = IndexedSet(["Thomas", "Brett", "Matthew", "Scott", "Bill"])
 
     workers = {
-        "g1": OrderedSet(["Thomas", "Brett", "Matthew"]),
-        "g2": OrderedSet(["Scott"]),
-        "g3": OrderedSet(["Bill"]),
+        "g1": IndexedSet(["Thomas", "Brett", "Matthew"]),
+        "g2": IndexedSet(["Scott"]),
+        "g3": IndexedSet(["Bill"]),
     }
 
     mdl = CpoModel()

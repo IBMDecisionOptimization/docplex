@@ -27,9 +27,8 @@ import tempfile
 import subprocess
 import tempfile
 import re
-from hashable_list import HashableList
-from ordered_set import OrderedSet
-import warnings
+import warnings, json
+from docplex.util.collections import FrozenList, IndexedSet
 
 
 
@@ -832,19 +831,19 @@ class ModelReader(object):
         mod_string_str = mod
         assert mod is not None
         def freeze(d):
-            if isinstance(d, OrderedSet):
+            if isinstance(d, IndexedSet):
                 return d
             elif isinstance(d, set) or isinstance(d, frozenset):
                 warnings.warn(
                         f"Avoid using built-in `set` or `{{}}`. Found: {d}. "
-                        f"Use `OrderedSet` instead, as it maintains order",
+                        f"Use `from docplex.util.collections import IndexedSet` instead, as it maintains order",
                         UserWarning
                     )
                 return frozenset([freeze(elem) for elem in d])
             elif isinstance(d, dict):
                 return { freeze(k) : freeze(v) for k,v in d.items() }
-            elif isinstance(d, list) or isinstance(d, HashableList):
-                return HashableList([freeze(elem) for elem in d])
+            elif isinstance(d, list) or isinstance(d, FrozenList):
+                return FrozenList([freeze(elem) for elem in d])
             elif isinstance(d, tuple):
                 return tuple([freeze(elem) for elem in d])
             else:
@@ -856,9 +855,9 @@ class ModelReader(object):
                 return "true" if val else "false"
             elif isinstance(val, (int, float)):
                 return str(val)
-            elif isinstance(val,set) or isinstance(val,frozenset) or isinstance(val,OrderedSet):
+            elif isinstance(val,set) or isinstance(val,frozenset) or isinstance(val,IndexedSet):
                 return "{" + ", ".join(map(format_value, val)) + "}"
-            elif isinstance(val,list) or isinstance(val, HashableList):
+            elif isinstance(val,list) or isinstance(val, FrozenList):
                 return "[" + ", ".join(map(format_value, val)) + "]"
             elif isinstance(val,dict):
                 entries = [f'{format_value(k)}: {format_value(v)}' for k, v in val.items()]
@@ -881,12 +880,24 @@ class ModelReader(object):
             dat_string = None
         elif isinstance(data, str):
             if os.path.isfile(data):
-                with open(data, 'r') as f:
-                    dat_string = f.read()
-            elif (os.path.sep in data and len(data.strip().splitlines()) == 1) or data.endswith('.dat'):
+                if data.endswith('.json'):
+                    with open(data, 'r') as f:
+                        data = json.load(f)  # dict
+                        dat_string = make_data(freeze(data))
+                else:
+                    with open(data, 'r') as f:
+                        dat_string = f.read()
+            elif (
+                (os.path.sep in data and len(data.strip().splitlines()) == 1)
+                or data.endswith(('.dat', '.json'))
+            ):
                 raise FileNotFoundError(f"Wrong path or file name: {data}")
             else:
-                dat_string = data
+                # Try parsing as JSON string
+                try:
+                    dat_string = make_data(freeze(json.loads(data))) 
+                except json.JSONDecodeError:
+                    dat_string = data
         else:
             if len(kwargs)!=0:
                 if data is None: data = {}
@@ -936,7 +947,9 @@ class ModelReader(object):
             if output == '':
                 output = cp.stderr
             else:
-                # print(output)
+                output_temp = output
+                output = output_temp.split('<<< setup', 1)[-1]
+                output = '<<< setup' + output if '<<< setup' in output_temp else ''
                 # Try to find the line number information
                 # example: *** ERROR[PARSE_001] at 19:7-15 ...
                 m = re.search('^... ERROR.*at ([1-9][0-9]*):([1-9][0-9]*)-([1-9][0-9]*)',

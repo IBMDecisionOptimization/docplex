@@ -19,7 +19,7 @@ represent variable names and the values contain the corresponding data. It also
 illustrates how to extract OPL variables from the model.
 """
 
-from ordered_set import OrderedSet
+from docplex.util.collections import IndexedSet
 import pandas as pd
 from docplex.cp.model import CpoModel
 
@@ -35,8 +35,8 @@ def main():
 
     data = {
         "NbHouses": 5,
-        "WorkerNames": OrderedSet(["Joe", "Jim"]),
-        "TaskNames": OrderedSet([
+        "WorkerNames": IndexedSet(["Joe", "Jim"]),
+        "TaskNames": IndexedSet([
             "masonry",
             "carpentry",
             "plumbing",
@@ -64,7 +64,7 @@ def main():
             "garden": "Joe",
             "moving": "Jim",
         },
-        "Precedences": OrderedSet([
+        "Precedences": IndexedSet([
             ("masonry", "carpentry"),
             ("masonry", "plumbing"),
             ("masonry", "ceiling"),
@@ -81,7 +81,7 @@ def main():
             ("painting", "moving"),
         ]),
         "Breaks": {
-            "Joe": OrderedSet([
+            "Joe": IndexedSet([
                 (5, 14), (19, 21), (26, 28), (33, 35), (40, 42),
                 (47, 49), (54, 56), (61, 63), (68, 70), (75, 77),
                 (82, 84), (89, 91), (96, 98), (103, 105), (110, 112),
@@ -106,7 +106,7 @@ def main():
                 (684, 686), (691, 693), (698, 700), (705, 707),
                 (712, 714), (719, 721), (726, 728),
             ]),
-            "Jim": OrderedSet([
+            "Jim": IndexedSet([
                 (5, 7), (12, 14), (19, 21), (26, 42), (47, 49),
                 (54, 56), (61, 63), (68, 70), (75, 77), (82, 84),
                 (89, 91), (96, 98), (103, 105), (110, 112),
