@@ -20,10 +20,9 @@ written to another Excel file. It also illustrates how to extract OPL variables
 from the model.
 """
 
-from ordered_set import OrderedSet
 import pandas as pd
 from docplex.mp.model_reader import ModelReader
-
+from docplex.util.collections import IndexedSet
 
 def main():
 
@@ -48,8 +47,8 @@ def main():
     Revenue = xsteel_xls.loc[6:7, 1:4]
 
     data = {
-        "Products": OrderedSet(Products.values.tolist()),
-        "TimePeriods": OrderedSet(TimePeriods.values.tolist()),
+        "Products": IndexedSet(Products.values.tolist()),
+        "TimePeriods": IndexedSet(TimePeriods.values.tolist()),
         "Rate": [float(x) for x in Rate.values.tolist()],
         "Inv0": [float(x) for x in Inv0.values.tolist()],
         "Avail": [float(x) for x in Avail.values.tolist()],

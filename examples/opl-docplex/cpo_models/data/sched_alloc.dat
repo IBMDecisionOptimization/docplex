@@ -1,0 +1,51 @@
+// --------------------------------------------------------------------------
+// Licensed Materials - Property of IBM
+//
+// 5725-A06 5725-A29 5724-Y48 5724-Y49 5724-Y54 5724-Y55
+// Copyright IBM Corporation 1998, 2013. All Rights Reserved.
+//
+// Note to U.S. Government Users Restricted Rights:
+// Use, duplication or disclosure restricted by GSA ADP Schedule
+// Contract with IBM Corp.
+// --------------------------------------------------------------------------
+
+
+Tasks = {"masonry", 
+         "carpentry", 
+         "plumbing", 
+         "ceiling",
+         "roofing", 
+         "painting", 
+         "windows", 
+         "facade",
+         "garden", 
+         "moving" };
+
+durations =  [7, 3, 8, 3, 1, 2, 1, 2, 1, 1];
+
+start =  [0, 7, 7, 7, 10,10,11,15,15,17];
+
+Groups = { g1, g2, g3 };
+
+maxUnusedWorkers = [ 2, 1, 1 ];
+
+mayperform = #[
+   masonry:   { g1, g2 },
+   carpentry: { g1, g3  },
+   plumbing:  { g2 },
+   ceiling:   { g1, g3 },
+   roofing:   { g1, g3 },
+   painting:  { g2, g3},
+   windows:   { g1, g3 },
+   facade:    { g1, g2 },
+   garden:    { g1, g2, g3 },
+   moving:    { g1, g3 } 
+]#;
+
+Workers = { Thomas, Brett, Matthew, Scott, Bill };
+
+workers = #[
+   g1: { Thomas, Brett, Matthew },
+   g2: { Scott },
+   g3: { Bill }
+]#;
