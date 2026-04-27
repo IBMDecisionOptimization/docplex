@@ -4968,7 +4968,7 @@ class Model(object):
         model solution. Otherwise returns None.
 
         :returns: The solve status of the last successful solve, a enumerated value of type
-            `docplex.utils.JobSolveStatus`
+            `docplex.util.status.JobSolveStatus`
 
         Note: The status returned by Cplex is stored as `status` in the solve_details of the model.
 
