@@ -13,3 +13,6 @@ __pycache__
 *.log
 .DS_Store
 version.info.properties
+
+**/*.egg-info/
+**/build/
