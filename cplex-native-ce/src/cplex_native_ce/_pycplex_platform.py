@@ -19,15 +19,15 @@ if platform.system() in ('Darwin', 'Linux', 'AIX', 'Windows', 'Microsoft'):
     if version_info < (3, 10, 0):
         raise Exception(ERROR_STRING)
     elif version_info < (3, 11, 0):
-        from cplex._internal.py310_cplex2220 import *
+        from .py310_cplex2220 import *
     elif version_info < (3, 12, 0):
-        from cplex._internal.py311_cplex2220 import *
+        from .py311_cplex2220 import *
     elif version_info < (3, 13, 0):
-        from cplex._internal.py312_cplex2220 import *
+        from .py312_cplex2220 import *
     elif version_info < (3, 14, 0):
-        from cplex._internal.py313_cplex2220 import *
+        from .py313_cplex2220 import *
     elif version_info < (3, 15, 0):
-        from cplex._internal.py314_cplex2220 import *
+        from .py314_cplex2220 import *
     else:
         raise Exception(ERROR_STRING)
 else:

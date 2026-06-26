@@ -6,8 +6,29 @@ build-backend = "setuptools.build_meta"
 name = "cplex-native-ce"
 version = "22.1.0"
 description = "CPLEX Community Edition native libraries"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = ["cplex"]
+authors = [
+    {name = "IBM ILOG CPLEX Optimization Studio"}
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: Other/Proprietary License",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: POSIX :: AIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 
 [project.entry-points."cplex.native"]
 ce = "cplex_native_ce:_pycplex"
@@ -18,5 +39,17 @@ package-dir = {"" = "src"}
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# Platform-specific binary extensions
+# For production distribution, build separate wheels for each platform:
+# - Linux: *.so files (manylinux_2_17_x86_64, manylinux_2_17_aarch64, etc.)
+# - macOS: *.dylib files (macosx_10_9_x86_64, macosx_11_0_arm64)
+# - Windows: *.pyd files (win_amd64, win32)
+# - AIX: *.so files (aix_7_2_ppc64)
+#
+# See PLATFORM_DISTRIBUTION.md for detailed distribution strategy
 [tool.setuptools.package-data]
-cplex_native_ce = ["*.so", "*.pyd", "*.dylib"]
+cplex_native_ce = [
+    "*.so",      # Linux/AIX shared libraries
+    "*.pyd",     # Windows Python extensions
+    "*.dylib",   # macOS dynamic libraries
+]
