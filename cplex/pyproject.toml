@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cplex"
+version = "1.0.0"
+description = "Core API for beta with pluggable backends"
+authors = [{ name = "Your Name" }]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+ce = ["cplex-native-ce"]
+full = ["cplex-native-full"]
+
+[tool.setuptools]
+package-dir = {"" = "src/main/python"}

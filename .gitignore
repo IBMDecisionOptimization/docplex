@@ -16,3 +16,4 @@ version.info.properties
 
 **/*.egg-info/
 **/build/
+**/dist/
