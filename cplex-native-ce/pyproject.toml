@@ -49,7 +49,7 @@ where = ["src"]
 # See PLATFORM_DISTRIBUTION.md for detailed distribution strategy
 [tool.setuptools.package-data]
 cplex_native_ce = [
-    "*.so",      # Linux/AIX shared libraries
-    "*.pyd",     # Windows Python extensions
-    "*.dylib",   # macOS dynamic libraries
+    "bin/**/*.so",      # Linux/AIX shared libraries
+    "bin/**/*.pyd",     # Windows Python extensions
+    "bin/**/*.dylib",   # macOS dynamic libraries
 ]

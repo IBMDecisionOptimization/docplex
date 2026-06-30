@@ -1,91 +1,51 @@
 """
 Setup script for cplex-native-ce with platform-specific library filtering.
+
+This setup.py imports the platform detection logic from _platform_utils
+to ensure consistency between build-time and runtime platform detection.
 """
 
-import platform
+import sys
 from pathlib import Path
 from setuptools import setup
 
-
-# Platform to library directory mapping
-PLATFORM_LIB_DIRS = {
-    'manylinux_2_17_x86_64': 'x86-64_linux',
-    'manylinux_2_17_aarch64': 'aarch64_linux',
-    'manylinux_2_17_ppc64le': 'ppc64le_linux',
-    'linux_x86_64': 'x86-64_linux',
-    'linux_aarch64': 'aarch64_linux',
-    'linux_ppc64le': 'ppc64le_linux',
-    'macosx_10_9_x86_64': 'x86-64_osx',
-    'macosx_11_0_arm64': 'arm64_osx',
-    'win_amd64': 'x86-64_windows',
-    'win32': 'x86_windows',
-    'aix_7_2_ppc64': 'ppc64_aix',
-}
-
-
-def get_platform_lib_dir():
-    """Determine which library directory to use based on the current platform."""
-    system = platform.system()
-    machine = platform.machine()
-    
-    if system == 'Linux':
-        if machine in ('x86_64', 'AMD64'):
-            return 'x86-64_linux'
-        elif machine == 'aarch64':
-            return 'aarch64_linux'
-        elif machine == 'ppc64le':
-            return 'ppc64le_linux'
-    elif system == 'Darwin':
-        if machine == 'arm64':
-            return 'arm64_osx'
-        else:
-            return 'x86-64_osx'
-    elif system == 'Windows':
-        if machine in ('AMD64', 'x86_64'):
-            return 'x86-64_windows'
-        else:
-            return 'x86_windows'
-    elif system == 'AIX':
-        return 'ppc64_aix'
-    
-    return None
+# Import the shared platform detection function directly
+# We can't import through cplex_native_ce package because __init__.py
+# tries to load the native libraries which don't exist yet during setup
+sys.path.insert(0, str(Path(__file__).parent / 'src' / 'cplex_native_ce'))
+from _platform_utils import get_library_path
 
 
 def get_platform_libs():
     """
     Get list of library files for the current platform.
-    
-    Returns paths relative to the src/ directory so setuptools can find them
-    in libs/<platform>/ and copy them into the cplex_native_ce package.
+
+    Returns glob patterns relative to the package directory
+    (src/cplex_native_ce/) so setuptools includes them as package data.
     """
-    lib_dir = get_platform_lib_dir()
-    
-    if not lib_dir:
-        print(f"Warning: Could not determine library directory for platform")
-        return []
-    
-    # Path relative to project root
-    libs_path = Path('libs') / lib_dir
-    
+    library_path = get_library_path()
+
+    # Absolute path to the platform library directory
+    libs_path = Path(__file__).parent / 'src' / 'cplex_native_ce' / library_path
+
     if not libs_path.exists():
         print(f"Warning: Library directory not found: {libs_path}")
         return []
-    
-    # Return paths relative to src/ directory (where cplex_native_ce package is)
-    # This tells setuptools: "copy these files from ../../libs/<platform>/ into the package"
-    lib_files = []
-    for lib_file in libs_path.glob('*'):
-        if lib_file.suffix in ('.so', '.pyd', '.dylib'):
-            # Path from src/cplex_native_ce/ to libs/<platform>/<file>
-            relative_path = f"../../../libs/{lib_dir}/{lib_file.name}"
-            lib_files.append(relative_path)
-    
+
+    lib_files = [
+        lib_file
+        for lib_file in libs_path.glob('*')
+        if lib_file.suffix in ('.so', '.pyd', '.dylib')
+    ]
+
     if lib_files:
-        print(f"Including libraries from {lib_dir}:")
+        print(f"Including libraries from {libs_path}:")
         for lib_file in lib_files:
-            print(f"  - {Path(lib_file).name}")
-    
-    return lib_files
+            print(f"  - {lib_file.name}")
+
+    # Return paths relative to src/cplex_native_ce/ for package_data
+    pkg_root = Path(__file__).parent / 'src' / 'cplex_native_ce'
+    return [str(f.relative_to(pkg_root)) for f in lib_files]
 
 
 setup(

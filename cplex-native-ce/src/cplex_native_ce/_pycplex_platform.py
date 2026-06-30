@@ -9,72 +9,40 @@
 # ------------------------------------------------------------------------------
 """Imports the shared library on supported platforms."""
 
-import os
-import sys
 import platform
+import sys
 from pathlib import Path
 from sys import version_info
 
+from cplex_native_ce._platform_utils import get_library_path
+
+
+# ---------------------------------------------------------------------------
+# Library path setup
+# ---------------------------------------------------------------------------
 
 def _setup_library_path():
-    """Add the platform-specific library directory to sys.path for imports."""
-    # Determine platform library directory
-    system = platform.system()
-    machine = platform.machine()
-    
-    if system == 'Linux':
-        if machine in ('x86_64', 'AMD64'):
-            lib_dir = 'x86-64_linux'
-        elif machine == 'aarch64':
-            lib_dir = 'aarch64_linux'
-        elif machine == 'ppc64le':
-            lib_dir = 'ppc64le_linux'
-        else:
-            lib_dir = None
-    elif system == 'Darwin':
-        if machine == 'arm64':
-            lib_dir = 'arm64_osx'
-        else:
-            lib_dir = 'x86-64_osx'
-    elif system in ('Windows', 'Microsoft'):
-        if machine in ('AMD64', 'x86_64'):
-            lib_dir = 'x86-64_windows'
-        else:
-            lib_dir = 'x86_windows'
-    elif system == 'AIX':
-        lib_dir = 'ppc64_aix'
-    else:
-        lib_dir = None
-    
-    if not lib_dir:
-        return  # Will fail later with appropriate error
-    
-    # Get package directory (absolute path)
+    """Add the platform-specific bin/<platform> directory to sys.path for imports."""
+    # get_library_path() returns e.g. 'bin/x86-64_linux', relative to the package root
+    lib_dir = get_library_path()
+
+    # Absolute path: <package>/bin/<platform>/
     package_dir = Path(__file__).parent.resolve()
-    
-    # Check if libraries are in package directory (installed wheel)
-    if any(package_dir.glob('*.so')) or any(package_dir.glob('*.pyd')) or any(package_dir.glob('*.dylib')):
-        # Libraries already in package directory, no need to add path
-        return
-    
-    # Libraries are in libs directory (development/editable install)
-    # package_dir is: .../cplex-native-ce/src/cplex_native_ce
-    # We need to go up to: .../cplex-native-ce/libs/<platform>
-    project_root = package_dir.parent.parent  # Go up from src/cplex_native_ce to cplex-native-ce
-    lib_path = project_root / 'libs' / lib_dir
-    
+    lib_path = package_dir / lib_dir
+
     if lib_path.exists():
-        # Add to sys.path so Python can import the .so/.pyd files
         lib_path_str = str(lib_path)
         if lib_path_str not in sys.path:
             sys.path.insert(0, lib_path_str)
 
 
+# Only load native libraries when imported as part of the package (not during setup.py).
+# When setup.py does a bare sys.path import, __package__ is None.
+
 # Setup library path before importing
 _setup_library_path()
 
 ERROR_STRING = "CPLEX 22.2.0.0 is not compatible with this version of Python."
-
 if platform.system() in ('Darwin', 'Linux', 'AIX', 'Windows', 'Microsoft'):
     if version_info < (3, 10, 0):
         raise Exception(ERROR_STRING)

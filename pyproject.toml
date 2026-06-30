@@ -1,3 +1,52 @@
 [build-system]
-requires = ["setuptools~=78.1.1"]
+requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "my-project-dev"
+version = "0.0.0"
+description = "Development workspace for alpha/beta/backends"
+requires-python = ">=3.9"
+dependencies = []
+
+# -------------------------------
+# DEV TOOLING CONFIGURATION
+# -------------------------------
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+select = ["E", "F", "I", "UP"]
+ignore = []
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = [
+    "alpha/tests",
+    "cplex/tests",
+    "beta-backend-lite/tests",
+    "beta-backend-full/tests",
+]
+
+# -------------------------------
+# OPTIONAL: DEV DEPENDENCIES
+# -------------------------------
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black",
+    "isort",
+    "ruff",
+    "build",
+    "twine"
+]
