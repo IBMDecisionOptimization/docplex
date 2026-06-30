@@ -21,25 +21,23 @@ from cplex_native_ce._platform_utils import get_library_path
 # Library path setup
 # ---------------------------------------------------------------------------
 
-def _setup_library_path():
-    """Add the platform-specific bin/<platform> directory to sys.path for imports."""
+def _setup_library_path() -> None:
+    """Prepend the package's platform-specific native library directory to sys.path."""
     # get_library_path() returns e.g. 'bin/x86-64_linux', relative to the package root
-    lib_dir = get_library_path()
+    relative_lib_dir = get_library_path()
+    library_path = Path(__file__).resolve().parent / relative_lib_dir
 
-    # Absolute path: <package>/bin/<platform>/
-    package_dir = Path(__file__).parent.resolve()
-    lib_path = package_dir / lib_dir
+    if not library_path.is_dir():
+        return
 
-    if lib_path.exists():
-        lib_path_str = str(lib_path)
-        if lib_path_str not in sys.path:
-            sys.path.insert(0, lib_path_str)
+    library_path_str = str(library_path)
+    if library_path_str in sys.path:
+        return
+
+    sys.path.insert(0, library_path_str)
 
 
-# Only load native libraries when imported as part of the package (not during setup.py).
-# When setup.py does a bare sys.path import, __package__ is None.
-
-# Setup library path before importing
+# Ensure the native library directory is on sys.path before importing versioned bindings.
 _setup_library_path()
 
 ERROR_STRING = "CPLEX 22.2.0.0 is not compatible with this version of Python."
