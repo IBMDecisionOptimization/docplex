@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cplex-native-ce"
-version = "22.1.0"
+dynamic = ["version"]
 description = "CPLEX Community Edition native libraries"
 requires-python = ">=3.10"
 dependencies = ["cplex"]
@@ -36,8 +36,18 @@ ce = "cplex_native_ce:_pycplex"
 [tool.setuptools]
 package-dir = {"" = "src"}
 
+[tool.setuptools.dynamic]
+version = {attr = "cplex_native_ce._version.__version__"}
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [
+    "src",                      # makes cplex_native_ce importable
+    "src/cplex_native_ce",      # makes bare internal imports work (e.g. _platform_utils)
+]
 
 # Platform-specific binary extensions
 # For production distribution, build separate wheels for each platform:
@@ -45,8 +55,7 @@ where = ["src"]
 # - macOS: *.dylib files (macosx_10_9_x86_64, macosx_11_0_arm64)
 # - Windows: *.pyd files (win_amd64, win32)
 # - AIX: *.so files (aix_7_2_ppc64)
-#
-# See PLATFORM_DISTRIBUTION.md for detailed distribution strategy
+
 [tool.setuptools.package-data]
 cplex_native_ce = [
     "bin/**/*.so",      # Linux/AIX shared libraries

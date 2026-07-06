@@ -12,6 +12,6 @@ from . import _pycplex
 __all__ = ['_pycplex']
 
 # Version info
-__version__ = "22.1.0"
+from ._version import __version__
 
 # Made with Bob
