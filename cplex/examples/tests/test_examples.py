@@ -11,8 +11,8 @@ import pytest
 from pathlib import Path
 
 # Directories
-MAIN_PYTHON_DIR = Path(__file__).parent.parent.parent / "main" / "python"
-DATA_DIR = Path(__file__).parent.parent.parent / "main" / "data"
+CPLEX_PYTHON_EXAMPLES_DIR = Path(__file__).parent.parent
+CPLEX_PYTHON_EXAMPLES_DATA_DIR = CPLEX_PYTHON_EXAMPLES_DIR / "data"
 
 
 def run_example(script_name, args=None):
@@ -26,7 +26,7 @@ def run_example(script_name, args=None):
     Raises:
         subprocess.CalledProcessError: If the script exits with non-zero status
     """
-    script_path = MAIN_PYTHON_DIR / script_name
+    script_path = CPLEX_PYTHON_EXAMPLES_DIR / "src" / script_name
     cmd = [sys.executable, str(script_path)]
     if args:
         cmd.extend(args)
@@ -53,57 +53,57 @@ class TestExamples:
 
     def test_admipex1(self):
         """Test admipex1 with noswot.mps file."""
-        filename = str(DATA_DIR / "p0033.mps")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "p0033.mps")
         run_example("admipex1.py", [filename])
 
     def test_admipex2(self):
         """Test admipex2 with noswot.mps file."""
-        filename = str(DATA_DIR / "mexample.mps")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "mexample.mps")
         run_example("admipex2.py", [filename])
 
     def test_admipex3(self):
         """Test admipex3 with sosex3.lp file."""
-        filename = str(DATA_DIR / "sosex3.lp")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "sosex3.lp")
         run_example("admipex3.py", [filename])
 
     def test_admipex4(self):
         """Test admipex4 with data directory."""
-        datadir = str(DATA_DIR)
+        datadir = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR)
         run_example("admipex4.py", [datadir])
 
     def test_admipex5(self):
         """Test admipex5 with facility data."""
-        run_example("admipex5.py", [f'-data={DATA_DIR}'])
+        run_example("admipex5.py", [f'-data={CPLEX_PYTHON_EXAMPLES_DATA_DIR}'])
 
     def test_admipex6(self):
         """Test admipex6 with noswot.mps file."""
-        filename = str(DATA_DIR / "mexample.mps.gz")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "mexample.mps.gz")
         run_example("admipex6.py", [filename])
 
     def test_admipex8(self):
         """Test admipex8 with facility data."""
-        datadir = str(DATA_DIR)
-        run_example("admipex8.py", [f'-data={DATA_DIR}'])
+        datadir = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR)
+        run_example("admipex8.py", [f'-data={CPLEX_PYTHON_EXAMPLES_DATA_DIR}'])
 
     def test_admipex9(self):
         """Test admipex9 with noswot.mps file."""
-        filename = str(DATA_DIR / "noswot.mps")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "noswot.mps")
         run_example("admipex9.py", [filename])
 
     def test_benders(self):
         """Test benders with example.mps and UFL annotation."""
-        filename = str(DATA_DIR / "UFL_25_35_1.mps")
-        annofile = str(DATA_DIR / "UFL_25_35_1.ann")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "UFL_25_35_1.mps")
+        annofile = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "UFL_25_35_1.ann")
         run_example("benders.py", [filename, annofile])
 
     def test_bendersatsp(self):
         """Test bendersatsp with atsp data."""
-        filename = str(DATA_DIR / "atsp.dat")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "atsp.dat")
         run_example("bendersatsp.py", ["0", filename])
 
     def test_bendersatsp2(self):
         """Test bendersatsp2 with atsp data."""
-        filename = str(DATA_DIR / "atsp.dat")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "atsp.dat")
         run_example("bendersatsp2.py", ["0", filename])
 
     def test_blend(self):
@@ -112,37 +112,37 @@ class TestExamples:
 
     def test_conflictex1(self):
         """Test conflictex1 with infeasible model."""
-        filename = str(DATA_DIR / "infeasible.lp")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "infeasible.lp")
         run_example("conflictex1.py", [filename])
 
     def test_cutstock(self):
         """Test cutstock with cutstock data."""
-        datafile = str(DATA_DIR / "cutstock.dat")
+        datafile = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "cutstock.dat")
         run_example("cutstock.py", [datafile])
 
     def test_diet(self):
         """Test diet example with diet data."""
-        filename = str(DATA_DIR / "diet.dat")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "diet.dat")
         run_example("diet.py", [filename])
 
     def test_diet_bycolumn(self):
         """Test diet example by column."""
-        filename = str(DATA_DIR / "diet.dat")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "diet.dat")
         run_example("diet.py", ["-c", filename])
 
     def test_diet_integral(self):
         """Test diet example with integral variables."""
-        filename = str(DATA_DIR / "diet.dat")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "diet.dat")
         run_example("diet.py", ["-i", filename])
 
     def test_etsp(self):
         """Test etsp with etsp data."""
-        datafile = str(DATA_DIR / "etsp.dat")
+        datafile = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "etsp.dat")
         run_example("etsp.py", [datafile])
 
     def test_facility(self):
         """Test facility with facility data."""
-        datafile = str(DATA_DIR / "facility.dat")
+        datafile = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "facility.dat")
         run_example("facility.py", [datafile])
 
     def test_fixcost1(self):
@@ -159,12 +159,12 @@ class TestExamples:
 
     def test_genericbranch(self):
         """Test genericbranch with noswot model."""
-        model = str(DATA_DIR / "noswot.mps")
+        model = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "noswot.mps")
         run_example("genericbranch.py", [model])
 
     def test_globalqpex1(self):
         """Test globalqpex1 with nonconvex QP."""
-        filename = str(DATA_DIR / "nonconvexqp.lp")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "nonconvexqp.lp")
         run_example("globalqpex1.py", [filename, "g"])
 
     def test_indefqpex1(self):
@@ -197,7 +197,7 @@ class TestExamples:
 
     def test_lpex2(self):
         """Test lpex2 with example.mps."""
-        filename = str(DATA_DIR / "example.mps")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "example.mps")
         run_example("lpex2.py", [filename, "o"])
 
     def test_lpex3(self):
@@ -218,7 +218,7 @@ class TestExamples:
 
     def test_lpex7(self):
         """Test lpex7 with example.mps."""
-        filename = str(DATA_DIR / "example.mps")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "example.mps")
         run_example("lpex7.py", [filename, "o"])
 
     def test_mipex1_row(self):
@@ -231,7 +231,7 @@ class TestExamples:
 
     def test_mipex2(self):
         """Test mipex2 with example.mps."""
-        filename = str(DATA_DIR / "example.mps")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "example.mps")
         run_example("mipex2.py", [filename])
 
     def test_mipex3(self):
@@ -240,7 +240,7 @@ class TestExamples:
 
     def test_mipex4(self):
         """Test mipex4 with noswot.mps."""
-        filename = str(DATA_DIR / "noswot.mps")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "noswot.mps")
         run_example("mipex4.py", [filename, "t"])
 
     def test_miqpex1(self):
@@ -249,12 +249,12 @@ class TestExamples:
 
     def test_multiobjex1(self):
         """Test multiobjex1 with multiobj model."""
-        filename = str(DATA_DIR / "multiobj.lp")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "multiobj.lp")
         run_example("multiobjex1.py", [filename])
 
     def test_populate(self):
         """Test populate with location model."""
-        filename = str(DATA_DIR / "location.lp")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "location.lp")
         run_example("populate.py", [filename])
 
     def test_qcpdual(self):
@@ -271,12 +271,12 @@ class TestExamples:
 
     def test_qpex2(self):
         """Test qpex2 with qpex model."""
-        filename = str(DATA_DIR / "qpex.lp")
+        filename = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "qpex.lp")
         run_example("qpex2.py", [filename, "o"])
 
     def test_rates(self):
         """Test rates with rates data."""
-        datafile = str(DATA_DIR / "rates.dat")
+        datafile = str(CPLEX_PYTHON_EXAMPLES_DATA_DIR / "rates.dat")
         run_example("rates.py", [datafile])
 
     def test_socpex1(self):
