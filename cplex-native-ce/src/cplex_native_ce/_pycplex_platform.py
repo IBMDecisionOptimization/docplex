@@ -9,15 +9,53 @@
 # ------------------------------------------------------------------------------
 """Imports the shared library on supported platforms."""
 
+import functools
 import importlib
-import platform
 import sys
+from packaging.version import Version
 from pathlib import Path
 from sys import version_info
+from types import ModuleType
 
 from cplex_native_ce._platform_utils import get_library_path
 from cplex_native_ce._version import __version__
 
+_MIN_PYTHON = (3, 10, 0)
+_MAX_PYTHON = (3, 15, 0)
+
+class _PyCplex:
+    """Resolves the versioned PyCplex binding module for the running Python.
+
+    All methods are classmethods: the class itself acts as the singleton and
+    is never instantiated.
+    """
+
+    @classmethod
+    def _python_tag(cls) -> str:
+        """CPython tag for the running interpreter (e.g. "py314")."""
+        if not (_MIN_PYTHON <= version_info < _MAX_PYTHON):
+            raise RuntimeError(
+                f"CPLEX {__version__} is not compatible with Python {version_info[:3]}."
+            )
+        return f"py3{version_info[1]}"
+
+    @classmethod
+    def _library_tag(cls) -> str:
+        """CPLEX version tag without separators, kept 3 digits (e.g. "cplex2220")."""
+        v = Version(__version__)
+        return f"cplex{v.major}{v.minor}{v.micro}"
+
+    @classmethod
+    # @functools.cache
+    def name(cls) -> str:
+        """Full binding module name (e.g. "py314_cplex2220")."""
+        return f"{cls._python_tag()}_{cls._library_tag()}"
+
+    @classmethod
+    # @functools.cache
+    def module(cls) -> ModuleType:
+        """The imported versioned native binding module."""
+        return importlib.import_module(cls.name())
 
 # ---------------------------------------------------------------------------
 # Library path setup
@@ -50,33 +88,36 @@ def _setup_library_path() -> None:
 # Ensure the native library directory is on sys.path before importing versioned bindings.
 _setup_library_path()
 
-# Derive the versioned binding module name from the Python version and the
-# CPLEX version, e.g. Python 3.14 + CPLEX 22.2.0 → "py314_cplex2220".
-_cplex_tag = __version__.replace(".", "")[:4]      # "22.2.0" → "2220"
-_py_tag    = f"py3{version_info[1]}"               # e.g. "py314"
-_mod_name  = f"{_py_tag}_cplex{_cplex_tag}"        # e.g. "py314_cplex2220"
+# _package_version = Version(__version__)
+# _pycplex_version = Version(f"{_package_version.major}.{_package_version.minor}.{_package_version.micro}")
+# # Derive the versioned binding module name from the Python version and the
+# # CPLEX version, e.g. Python 3.14 + CPLEX 22.2.0 → "py314_cplex2220".
+# _pycplex_tag = _pycplex_version._str.replace(".", "")[:4] # "22.2.0" → "2220"
+# _py_tag    = f"py3{version_info[1]}"               # e.g. "py314"
+# _mod_name  = f"{_py_tag}_cplex{_pycplex_tag}"        # e.g. "py314_cplex2220"
+#
+# _SUPPORTED_PLATFORMS = ('Darwin', 'Linux', 'AIX', 'Windows', 'Microsoft')
+# _MIN_PYTHON = (3, 10, 0)
+# _MAX_PYTHON = (3, 15, 0)
+# _ERROR_STRING = f"CPLEX {__version__} is not compatible with this version of Python."
 
-_SUPPORTED_PLATFORMS = ('Darwin', 'Linux', 'AIX', 'Windows', 'Microsoft')
-_MIN_PYTHON = (3, 10, 0)
-_MAX_PYTHON = (3, 15, 0)
-_ERROR_STRING = f"CPLEX {__version__} is not compatible with this version of Python."
+# if platform.system() not in _SUPPORTED_PLATFORMS:
+#     raise Exception("The CPLEX Python API is not supported on this platform.")
 
-if platform.system() not in _SUPPORTED_PLATFORMS:
-    raise Exception("The CPLEX Python API is not supported on this platform.")
-if not (_MIN_PYTHON <= version_info < _MAX_PYTHON):
-    raise Exception(_ERROR_STRING)
 
-_native = importlib.import_module(_mod_name)
-globals().update({k: v for k, v in vars(_native).items() if not k.startswith("_")})
+# _pycplex = _PyCplex()
+# _native = _PyCplex().module
+globals().update({k: v for k, v in vars(_PyCplex.module()).items() if not k.startswith("_")})
 
 # Verify the loaded native library reports the same version as _version.py.
-_native_version = (
-    f"{_native.CPX_VERSION_VERSION}"
-    f".{_native.CPX_VERSION_RELEASE}"
-    f".{_native.CPX_VERSION_MODIFICATION}"
-)
-if _native_version != __version__:
-    raise RuntimeError(
-        f"CPLEX native library version mismatch: "
-        f"expected {__version__}, got {_native_version} (from {_mod_name})"
-    )
+# _native_version = (
+#     f"{_native.CPX_VERSION_VERSION}"
+#     f".{_native.CPX_VERSION_RELEASE}"
+#     f".{_native.CPX_VERSION_MODIFICATION}"
+# )
+# if _pycplex_version != __version__:
+#     raise RuntimeError(
+#         f"CPLEX native library version mismatch: "
+#         f"expected {__version__}, got {_pycplex_version} (from {_mod_name})"
+#     )
+

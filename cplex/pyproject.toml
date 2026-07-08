@@ -4,15 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cplex"
-version = "1.0.0"
+version = "22.2.0.16"
 description = "Core API for beta with pluggable backends"
 authors = [{ name = "Your Name" }]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = []
 
 [project.optional-dependencies]
-ce = ["cplex-native-ce"]
-full = ["cplex-native-full"]
+ce = ["cplex_native_ce"]
+full = ["cplex_native_full"]
 
 [tool.setuptools]
 package-dir = {"" = "src/main/python"}
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q"
+testpaths = ["tests"]
+pythonpath = ["tests"]

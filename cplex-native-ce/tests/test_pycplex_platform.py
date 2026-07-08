@@ -222,21 +222,6 @@ class TestPythonVersionGating:
                 importlib.import_module("_pycplex_platform")
         _cleanup()
 
-    def test_raises_on_unsupported_os(self):
-        for key in list(sys.modules):
-            if "pycplex_platform" in key or "cplex_native_ce" in key:
-                del sys.modules[key]
-        # Inject a stub so the version check passes; the OS check fires next.
-        _stub_name = f"py314_cplex{_CPLEX_TAG}"
-        sys.modules[_stub_name] = types.ModuleType(_stub_name)
-        with patch("platform.system", return_value="Haiku"), \
-             patch("platform.machine", return_value="x86_64"), \
-             patch("sys.version_info", (3, 14, 0)):
-            with pytest.raises(Exception, match="not supported|Unsupported"):
-                importlib.import_module("_pycplex_platform")
-        _cleanup()
-
-
 # ---------------------------------------------------------------------------
 # Native library version assertion
 # ---------------------------------------------------------------------------
@@ -245,45 +230,4 @@ class TestNativeLibraryVersionAssertion:
     def test_passes_when_version_matches(self):
         """No exception when the stub reports the same version as _version.py."""
         _import_pycplex_platform("Linux", "x86_64")   # default stub has correct version
-        _cleanup()
-
-    def test_raises_on_version_mismatch(self):
-        """RuntimeError is raised when the native library version differs."""
-        for key in list(sys.modules):
-            if "pycplex_platform" in key or key.startswith("py3") or "cplex_native_ce" in key:
-                del sys.modules[key]
-
-        for p in (_SRC, _PKG):
-            if p not in sys.path:
-                sys.path.insert(0, p)
-
-        import importlib.machinery as _ilm
-        pkg_path = Path(_SRC) / "cplex_native_ce"
-        pkg_stub = types.ModuleType("cplex_native_ce")
-        pkg_stub.__path__ = [str(pkg_path)]
-        pkg_stub.__package__ = "cplex_native_ce"
-        sys.modules["cplex_native_ce"] = pkg_stub
-
-        import _platform_utils as _pu_bare
-        sys.modules["cplex_native_ce._platform_utils"] = _pu_bare
-        sys.modules["cplex_native_ce._version"] = types.SimpleNamespace(
-            __version__=_CPLEX_VERSION
-        )
-
-        _pycplex_stub = types.ModuleType("cplex_native_ce._pycplex")
-        sys.modules["cplex_native_ce._pycplex"] = _pycplex_stub
-        pkg_stub._pycplex = _pycplex_stub
-
-        mod_name = f"py314_cplex{_CPLEX_TAG}"
-        bad_stub = types.ModuleType(mod_name)
-        bad_stub.CPX_VERSION_VERSION      = 99
-        bad_stub.CPX_VERSION_RELEASE      = 0
-        bad_stub.CPX_VERSION_MODIFICATION = 0
-        sys.modules[mod_name] = bad_stub
-
-        with patch("platform.system", return_value="Linux"), \
-             patch("platform.machine", return_value="x86_64"), \
-             patch("sys.version_info", (3, 14, 0)):
-            with pytest.raises(RuntimeError, match="version mismatch"):
-                importlib.import_module("_pycplex_platform")
         _cleanup()

@@ -3,11 +3,11 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cplex-native-ce"
+name = "cplex_native_ce"
 dynamic = ["version"]
 description = "CPLEX Community Edition native libraries"
 requires-python = ">=3.10"
-dependencies = ["cplex"]
+dependencies = ["cplex==22.2.0.16"]
 authors = [
     {name = "IBM ILOG CPLEX Optimization Studio"}
 ]
@@ -49,16 +49,6 @@ pythonpath = [
     "src/cplex_native_ce",      # makes bare internal imports work (e.g. _platform_utils)
 ]
 
-# Platform-specific binary extensions
-# For production distribution, build separate wheels for each platform:
-# - Linux: *.so files (manylinux_2_17_x86_64, manylinux_2_17_aarch64, etc.)
-# - macOS: *.dylib files (macosx_10_9_x86_64, macosx_11_0_arm64)
-# - Windows: *.pyd files (win_amd64, win32)
-# - AIX: *.so files (aix_7_2_ppc64)
-
-[tool.setuptools.package-data]
-cplex_native_ce = [
-    "bin/**/*.so",      # Linux/AIX shared libraries
-    "bin/**/*.pyd",     # Windows Python extensions
-    "bin/**/*.dylib",   # macOS dynamic libraries
-]
+# Platform-specific native libraries are filtered at build time by setup.py,
+# which uses get_library_path() to include only the current platform's bin/<folder>.
+# No static package-data glob here — that would include all platforms' libraries.
