@@ -7,7 +7,7 @@
 # disclosure restricted by GSA ADP Schedule Contract with
 # IBM Corp.
 # ------------------------------------------------------------------------------
-"""Unit tests for cplex_native_ce._pycplex_platform.
+"""Unit tests for cplex_ce._pycplex_platform.
 
 Because _pycplex_platform runs native-library imports at module level, the
 module is imported inside each test using importlib after patching
@@ -23,7 +23,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cplex_native_ce._version import __version__ as _CPLEX_VERSION
+from cplex_ce._version import __version__ as _CPLEX_VERSION
 
 _CPLEX_TAG = _CPLEX_VERSION.replace(".", "")[:4]   # e.g. "2220"
 
@@ -32,7 +32,7 @@ _CPLEX_TAG = _CPLEX_VERSION.replace(".", "")[:4]   # e.g. "2220"
 # ---------------------------------------------------------------------------
 
 _SRC = str(Path(__file__).parent.parent / "src")
-_PKG = str(Path(__file__).parent.parent / "src" / "cplex_native_ce")
+_PKG = str(Path(__file__).parent.parent / "src" / "cplex_ce")
 
 
 def _import_pycplex_platform(system: str, machine: str, python_version=(3, 14, 0)):
@@ -46,34 +46,34 @@ def _import_pycplex_platform(system: str, machine: str, python_version=(3, 14, 0
 
     # Remove cached copies so the reload picks up the mocks.
     for key in list(sys.modules):
-        if "pycplex_platform" in key or key.startswith("py3") or "cplex_native_ce" in key:
+        if "pycplex_platform" in key or key.startswith("py3") or "cplex_ce" in key:
             del sys.modules[key]
 
-    # Provide a real package stub for cplex_native_ce so that the
+    # Provide a real package stub for cplex_ce so that the
     # package-relative import resolves without loading the native .so.
     import importlib.machinery as _ilm
-    pkg_path = Path(_SRC) / "cplex_native_ce"
+    pkg_path = Path(_SRC) / "cplex_ce"
     pkg_spec = _ilm.ModuleSpec(
-        "cplex_native_ce",
-        _ilm.SourceFileLoader("cplex_native_ce", str(pkg_path / "__init__.py")),
+        "cplex_ce",
+        _ilm.SourceFileLoader("cplex_ce", str(pkg_path / "__init__.py")),
         origin=str(pkg_path / "__init__.py"),
         is_package=True,
     )
-    pkg_stub = types.ModuleType("cplex_native_ce")
+    pkg_stub = types.ModuleType("cplex_ce")
     pkg_stub.__path__ = [str(pkg_path)]
-    pkg_stub.__package__ = "cplex_native_ce"
+    pkg_stub.__package__ = "cplex_ce"
     pkg_stub.__spec__ = pkg_spec
-    sys.modules["cplex_native_ce"] = pkg_stub
+    sys.modules["cplex_ce"] = pkg_stub
 
     # Pre-register _platform_utils under the package name so the
-    # `from cplex_native_ce._platform_utils import ...` in _pycplex_platform
+    # `from cplex_ce._platform_utils import ...` in _pycplex_platform
     # doesn't need to re-import (and thus trigger __init__.py's native import).
     import _platform_utils as _pu_bare
-    sys.modules["cplex_native_ce._platform_utils"] = _pu_bare
+    sys.modules["cplex_ce._platform_utils"] = _pu_bare
 
     # Stub out _pycplex so __init__.py's `from . import _pycplex` is harmless.
-    _pycplex_stub = types.ModuleType("cplex_native_ce._pycplex")
-    sys.modules["cplex_native_ce._pycplex"] = _pycplex_stub
+    _pycplex_stub = types.ModuleType("cplex_ce._pycplex")
+    sys.modules["cplex_ce._pycplex"] = _pycplex_stub
     pkg_stub._pycplex = _pycplex_stub
 
     # Derive the stub name exactly as the source does

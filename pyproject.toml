@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "my-project-dev"
 version = "0.0.0"
 description = "Development workspace for alpha/beta/backends"
-requires-python = ">=3.9"
+requires-python = ">=3.11,<=3.15"
 dependencies = []
 
 # -------------------------------
@@ -15,7 +15,7 @@ dependencies = []
 
 [tool.black]
 line-length = 100
-target-version = ["py39"]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
@@ -23,7 +23,7 @@ line_length = 100
 
 [tool.ruff]
 line-length = 100
-target-version = "py39"
+target-version = "py311"
 select = ["E", "F", "I", "UP"]
 ignore = []
 

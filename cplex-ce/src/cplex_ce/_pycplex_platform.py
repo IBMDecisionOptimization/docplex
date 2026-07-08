@@ -17,8 +17,8 @@ from pathlib import Path
 from sys import version_info
 from types import ModuleType
 
-from cplex_native_ce._platform_utils import get_library_path
-from cplex_native_ce._version import __version__
+from cplex_ce._platform_utils import get_library_path
+from cplex_ce._version import __version__
 
 _MIN_PYTHON = (3, 10, 0)
 _MAX_PYTHON = (3, 15, 0)
