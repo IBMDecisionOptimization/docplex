@@ -13,5 +13,3 @@ __all__ = ['_pycplex']
 
 # Version info
 from ._version import __version__
-
-# Made with Bob

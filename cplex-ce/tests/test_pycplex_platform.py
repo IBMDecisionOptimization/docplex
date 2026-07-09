@@ -114,9 +114,9 @@ class TestSetupLibraryPath:
     def test_adds_bin_dir_to_sys_path_when_no_so_in_package(self, tmp_path):
         """
         When the package directory contains no .so/.pyd/.dylib files and the
-        bin/<platform> directory exists, it should be prepended to sys.path.
+        _internal_/<platform> directory exists, it should be prepended to sys.path.
         """
-        bin_dir = tmp_path / "bin" / "x86-64_linux"
+        bin_dir = tmp_path / "_internal_" / "x86-64_linux"
         bin_dir.mkdir(parents=True)
         (bin_dir / "libdummy.so").touch()
 
@@ -130,7 +130,7 @@ class TestSetupLibraryPath:
             mod._setup_library_path.__globals__["__file__"] = str(
                 tmp_path / "_pycplex_platform.py"
             )
-            with patch.object(mod, "get_library_path", return_value=f"bin/x86-64_linux"), \
+            with patch.object(mod, "get_library_path", return_value=f"_internal_/x86-64_linux"), \
                  patch("pathlib.Path.exists", return_value=True), \
                  patch("pathlib.Path.glob", return_value=iter([])):
                 mod._setup_library_path()
@@ -145,7 +145,7 @@ class TestSetupLibraryPath:
         """
         mod = _import_pycplex_platform("Linux", "x86_64")
         original_path = sys.path.copy()
-        with patch.object(mod, "get_library_path", return_value="bin/x86-64_linux"), \
+        with patch.object(mod, "get_library_path", return_value="_internal_/x86-64_linux"), \
              patch("pathlib.Path.glob", return_value=iter([Path("dummy.so")])):
             mod._setup_library_path()
             assert sys.path == original_path
@@ -162,10 +162,10 @@ class TestSetupLibraryPath:
         _cleanup()
 
     def test_no_op_when_bin_dir_does_not_exist(self, tmp_path):
-        """When the bin/<platform> dir is missing, sys.path must not change."""
+        """When the _internal_/<platform> dir is missing, sys.path must not change."""
         mod = _import_pycplex_platform("Linux", "x86_64")
         original_path = sys.path.copy()
-        with patch.object(mod, "get_library_path", return_value="bin/x86-64_linux"), \
+        with patch.object(mod, "get_library_path", return_value="_internal_/x86-64_linux"), \
              patch("pathlib.Path.glob", return_value=iter([])), \
              patch("pathlib.Path.exists", return_value=False):
             mod._setup_library_path()
@@ -174,7 +174,7 @@ class TestSetupLibraryPath:
 
     def test_path_not_duplicated_when_already_present(self, tmp_path):
         """If the lib dir is already in sys.path, it must not be added again."""
-        bin_dir = tmp_path / "bin" / "x86-64_linux"
+        bin_dir = tmp_path / "_internal_" / "x86-64_linux"
         bin_dir.mkdir(parents=True)
         lib_path_str = str(bin_dir)
 
@@ -182,7 +182,7 @@ class TestSetupLibraryPath:
         sys.path.insert(0, lib_path_str)
         count_before = sys.path.count(lib_path_str)
 
-        with patch.object(mod, "get_library_path", return_value="bin/x86-64_linux"), \
+        with patch.object(mod, "get_library_path", return_value="_internal_/x86-64_linux"), \
              patch("pathlib.Path.glob", return_value=iter([])), \
              patch("pathlib.Path.exists", return_value=True), \
              patch("pathlib.Path.__truediv__",

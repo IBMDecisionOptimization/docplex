@@ -70,7 +70,7 @@ def _setup_library_path() -> None:
 
     pkg_dir = Path(__file__).resolve().parent
     # Skip if native extensions are already co-located with the package
-    # (i.e. installed from a platform wheel — no bin/ subdir needed).
+    # (i.e. installed from a platform wheel — no _internal_/ subdir needed).
     if any(pkg_dir.glob("*.so")) or any(pkg_dir.glob("*.pyd")) or any(pkg_dir.glob("*.dylib")):
         return
 

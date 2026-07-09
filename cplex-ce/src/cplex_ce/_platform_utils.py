@@ -112,13 +112,13 @@ class Port(Enum):
 
 
 def get_library_path() -> str:
-    """Return the ``bin/<folder>`` path for the current platform.
+    """Return the ``_internal_/<folder>`` path for the current platform.
 
     Iterates over all ``Port`` members and returns the path for the first
     one that matches the running platform.
 
     Returns:
-        A relative path string such as ``'bin/x86-64_linux'``.
+        A relative path string such as ``'_internal_/x86-64_linux'``.
 
     Raises:
         ValueError: If no ``Port`` member matches the current platform.
@@ -126,4 +126,4 @@ def get_library_path() -> str:
     port: Union[Port, None] = next((p for p in Port if p.match_platform()), None)
     if port is None:
         raise ValueError(f'Unsupported platform: {platform.system()}-{platform.machine()}')
-    return f'bin/{port.folder}'
+    return f'_internal_/{port.folder}'

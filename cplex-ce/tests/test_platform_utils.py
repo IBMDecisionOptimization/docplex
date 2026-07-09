@@ -187,13 +187,13 @@ class TestPort:
 
 class TestGetLibraryPath:
     @pytest.mark.parametrize("system,machine,expected", [
-        ("Linux",   "x86_64",  "bin/x86-64_linux"),
-        ("Linux",   "AMD64",   "bin/x86-64_linux"),
-        ("Linux",   "aarch64", "bin/arm64_linux"),
-        ("Linux",   "ppc64le", "bin/ppc64le_linux"),
-        ("Darwin",  "arm64",   "bin/arm64_osx"),
-        ("Windows", "x86_64",  "bin/x86-64_windows"),
-        ("Windows", "AMD64",   "bin/x86-64_windows"),
+        ("Linux",   "x86_64",  "_internal_/x86-64_linux"),
+        ("Linux",   "AMD64",   "_internal_/x86-64_linux"),
+        ("Linux",   "aarch64", "_internal_/arm64_linux"),
+        ("Linux",   "ppc64le", "_internal_/ppc64le_linux"),
+        ("Darwin",  "arm64",   "_internal_/arm64_osx"),
+        ("Windows", "x86_64",  "_internal_/x86-64_windows"),
+        ("Windows", "AMD64",   "_internal_/x86-64_windows"),
     ])
     def test_returns_bin_slash_folder(self, system, machine, expected):
         with patch("platform.system", return_value=system), \
@@ -217,4 +217,4 @@ class TestGetLibraryPath:
              patch("platform.machine", return_value="x86_64"):
             result = get_library_path()
             assert isinstance(result, str)
-            assert result.startswith("bin/")
+            assert result.startswith("_internal_/")

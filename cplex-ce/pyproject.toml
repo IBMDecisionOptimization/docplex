@@ -50,5 +50,5 @@ pythonpath = [
 ]
 
 # Platform-specific native libraries are filtered at build time by setup.py,
-# which uses get_library_path() to include only the current platform's bin/<folder>.
+# which uses get_library_path() to include only the current platform's _internal_/<folder>.
 # No static package-data glob here — that would include all platforms' libraries.

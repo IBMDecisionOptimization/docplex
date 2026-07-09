@@ -53,5 +53,3 @@ setup(
         "cplex_ce": get_platform_libs()
     },
 )
-
-# Made with Bob
