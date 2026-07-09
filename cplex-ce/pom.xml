@@ -1,0 +1,132 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.ibm.ilog.optim.python</groupId>
+	<artifactId>cplex-ce</artifactId>
+	<version>LATEST-SNAPSHOT</version>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<cplex.version>22.2.0.0.R2ce</cplex.version>
+		<skipCplexFetch>true</skipCplexFetch>
+	</properties>
+
+
+	<profiles>
+		<profile>
+			<id>fetch-cplex</id>
+			<properties>
+				<skipCplexFetch>false</skipCplexFetch>
+			</properties>
+		</profile>
+	</profiles>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>com.ibm.ilog.optim</groupId>
+			<artifactId>cplex-python</artifactId>
+			<version>${cplex.version}</version>
+			<classifier>linux-ppcle</classifier>
+			<type>tar.gz</type>
+		</dependency>
+		<dependency>
+			<groupId>com.ibm.ilog.optim</groupId>
+			<artifactId>cplex-python</artifactId>
+			<version>${cplex.version}</version>
+			<classifier>linux-x86-64</classifier>
+			<type>tar.gz</type>
+		</dependency>
+		<dependency>
+			<groupId>com.ibm.ilog.optim</groupId>
+			<artifactId>cplex-python</artifactId>
+			<version>${cplex.version}</version>
+			<classifier>osx-arm64</classifier>
+			<type>tar.gz</type>
+		</dependency>
+		<dependency>
+			<groupId>com.ibm.ilog.optim</groupId>
+			<artifactId>cplex-python</artifactId>
+			<version>${cplex.version}</version>
+			<classifier>win-x86-64</classifier>
+			<type>tar.gz</type>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<!-- 1. Unpack all dependency archives into target/dependency -->
+					<execution>
+						<id>unpack-cplex</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>unpack-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}/dependency</outputDirectory>
+							<skip>${skipCplexFetch}</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<!-- 2. Copy only shared libraries flattened into src/cplex_ce/_internal_/<port>/. -->
+					<execution>
+						<id>copy-native-libs</id>
+						<phase>generate-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target unless="${skipCplexFetch}">
+								<macrodef name="copy-port">
+									<attribute name="port"/>
+									<element name="lib-includes" implicit="true"/>
+									<sequential>
+										<delete dir="${project.basedir}/src/cplex_ce/_internal_/@{port}"/>
+										<mkdir  dir="${project.basedir}/src/cplex_ce/_internal_/@{port}"/>
+										<copy todir="${project.basedir}/src/cplex_ce/_internal_/@{port}"
+										      flatten="true" overwrite="true">
+											<fileset dir="${project.build.directory}/dependency/cplex/python">
+												<lib-includes/>
+											</fileset>
+										</copy>
+									</sequential>
+								</macrodef>
+
+								<copy-port port="x86-64_linux">
+									<include name="*/x86-64_linux/cplex/_internal/*.so"/>
+								</copy-port>
+
+								<copy-port port="x64_win64">
+									<include name="*/x64_win64/cplex/_internal/*.dll"/>
+									<include name="*/x64_win64/cplex/_internal/*.pyd"/>
+								</copy-port>
+
+								<copy-port port="ppc64le_linux">
+									<include name="*/ppc64le_linux/cplex/_internal/*.so"/>
+								</copy-port>
+
+								<copy-port port="arm64_osx">
+									<include name="*/arm64_osx/cplex/_internal/*.dylib"/>
+									<include name="*/arm64_osx/cplex/_internal/*.so"/>
+								</copy-port>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+</project>
