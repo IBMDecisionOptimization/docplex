@@ -1,0 +1,6 @@
+# FIXME Shared libs should be push - Assert they are Community Edition first
+src/cplex_pe/_internal_/
+
+# Build directories
+build/
+target/

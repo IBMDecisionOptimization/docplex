@@ -17,7 +17,7 @@
 import sys
 
 # Priority order for native backends: lower value = higher priority.
-# If both cplex_ce and cplex_native_full are installed, full wins.
+# If both cplex_ce and cplex_pe are installed, full wins.
 _BACKEND_PRIORITY = {"full": 0, "ce": 1}
 
 # Load _pycplex FIRST before any modules that depend on it
@@ -32,7 +32,7 @@ def _load_native_backend():
     if not eps:
         raise RuntimeError(
             "No CPLEX native backend installed. "
-            "Install either 'cplex_ce' or 'cplex_native_full'."
+            "Install either 'cplex_ce' or 'cplex_pe'."
         )
     return eps[0].load()
 

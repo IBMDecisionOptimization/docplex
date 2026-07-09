@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.ibm.ilog.optim.python</groupId>
-	<artifactId>cplex-ce</artifactId>
+	<artifactId>cplex-pe</artifactId>
 	<version>LATEST-SNAPSHOT</version>
 
 	<properties>
@@ -11,7 +11,7 @@
 
 		<cplex.version>22.2.0.0.R2ce</cplex.version>
 		<skipCplexFetch>true</skipCplexFetch>
-		<project.package>cplex_ce</project.package>
+		<project.package>cplex_pe</project.package>
 	</properties>
 
 
@@ -89,6 +89,7 @@
 						</goals>
 						<configuration>
 							<target unless="${skipCplexFetch}">
+								<fail unless="project.package">project.package property must be set</fail>
 								<macrodef name="copy-port">
 									<attribute name="port"/>
 									<element name="lib-includes" implicit="true"/>
