@@ -7,7 +7,7 @@ name = "cplex_ce"
 dynamic = ["version"]
 description = "CPLEX Community Edition native libraries"
 requires-python = ">=3.11,<=3.15"
-dependencies = ["cplex==22.2.0.16"]
+dependencies = []
 authors = [
     {name = "IBM ILOG CPLEX Optimization Studio"}
 ]

@@ -8,10 +8,9 @@ version = "22.2.0.16"
 description = "Core API for beta with pluggable backends"
 authors = [{ name = "Your Name" }]
 requires-python = ">=3.11,<=3.15"
-dependencies = []
+dependencies = ["cplex_ce"]
 
 [project.optional-dependencies]
-ce = ["cplex_ce"]
 full = ["cplex_native_full"]
 
 [tool.setuptools]
