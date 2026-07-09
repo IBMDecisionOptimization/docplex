@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Pytest suite to ensure all examples in src/main/python execute without exceptions.
+Pytest suite to ensure all examples in src execute without exceptions.
 
 This test suite runs each example as a subprocess with appropriate arguments and data files.
 """

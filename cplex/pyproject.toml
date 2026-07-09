@@ -14,10 +14,10 @@ dependencies = ["cplex_ce"]
 full = ["cplex_pe"]
 
 [tool.setuptools]
-package-dir = {"" = "src/main/python"}
+package-dir = {"" = "src"}
 
 [tool.pytest.ini_options]
 minversion = "7.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
-pythonpath = ["tests"]
+pythonpath = ["src", "tests"]
