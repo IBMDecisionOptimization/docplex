@@ -9,14 +9,12 @@
 # disclosure restricted by GSA ADP Schedule Contract with
 # IBM Corp.
 # --------------------------------------------------------------------------
+import importlib.metadata
 import sys
-import json
 import os
-import subprocess
 import shutil
 import glob
 import argparse
-import sysconfig
 
 
 
@@ -57,55 +55,22 @@ def check_file(fname, write=False):
     return ok
 
 
-def get_cplex_info():
-    sub_program = """
-try:
-    import cplex
-    import json
-    info = {"path": cplex.__path__[0], "version": cplex.__version__}
-    print(json.dumps(info))
-except ModuleNotFoundError as e:
-    raise
-
-    """
-
-    # This needs to be run as another process as there is no other
-    # way of unloading the 'cplex' module and since we will copy
-    # a new shared object over the already loaded one, leaving the
-    # cplex module loaded can create a segmentation fault.
-    out = subprocess.run([sys.executable, "-c", sub_program], capture_output=True)
-    if out.returncode == 0:
-        return json.loads(out.stdout.decode("utf-8"))
-    else:
-        error_message = out.stderr.decode("utf-8").strip()
-        raise Exception(f"Failed to retrieve cplex module path or version: {error_message}")
-
-
 def copy_so(cos):
     cos = os.path.realpath(cos)
-    pycplex = get_cplex_info()
+    dist = importlib.metadata.distribution('cplex')
 
-    version_mneumonic = "".join(pycplex["version"].split(".")[:3])
+    version_mneumonic = "".join(dist.version.split(".")[:3])
     so_name = get_so_name(version_mneumonic)
     cpo_name = get_cpo_name(version_mneumonic)
 
-    # Search cplex binaries in the bin and site-packages directories of the current Python environment
-    targets_path: list[str] = [sysconfig.get_path('purelib'), os.path.dirname(sys.executable)]
-    if sys.platform == "darwin":
-        targets_path.append(os.path.join(os.path.dirname(sys.executable), "Contents", "MacOS"))
-
-    so_targets: list[str] = []
-    cpo_targets: list[str] = []
-
-    for target_dir in targets_path:
-        so_targets.extend(glob.glob("{}/**/{}".format(target_dir, so_name), recursive=True))
-        cpo_targets.extend(glob.glob("{}/**/{}".format(target_dir, cpo_name), recursive=True))
+    so_targets = [file.locate().resolve() for file in dist.files if file.name == so_name]
+    cpo_targets = [file.locate().resolve() for file in dist.files if file.name == cpo_name]
 
     if len(so_targets) == 0:
-        print("ERROR: did not find shared object file {} in {}".format(so_name, targets_path))
+        print("ERROR: did not find shared object file {}".format(so_name))
         return 1
     if len(cpo_targets) == 0:
-        print("ERROR: did not find executable file {} in {}".format(cpo_name, targets_path))
+        print("ERROR: did not find executable file {}".format(cpo_name))
         return 1
 
     #
