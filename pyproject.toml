@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cos-python"
 version = "0.0.0"
-description = "Development workspace for alpha/beta/backends"
+description = "Development workspace for IBM ILOG Optimization components for Python"
 requires-python = ">=3.11,<=3.15"
 dependencies = []
 
@@ -44,6 +44,8 @@ testpaths = [
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pre-commit",
+    "detect-secrets",
     "black",
     "isort",
     "ruff",
