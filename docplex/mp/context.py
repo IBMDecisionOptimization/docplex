@@ -250,6 +250,7 @@ class SolverContext(BaseContext):
         self.log_output = False
         self.max_threads = get_environment().get_available_core_count()
         self.auto_publish = create_default_auto_publish_context()
+        self.collect_model_statistics = True
         self.kpi_reporting = BaseContext()
         from docplex.mp.progress import ProgressClock
         self.kpi_reporting.filter_level = ProgressClock.Gap
@@ -322,6 +323,7 @@ class Context(BaseContext):
             are saved as a table with KPI name and values. Currently only
             csv files are supported. This can be a list of filenames if
             multiple KPIs files are to be published.
+        solver.collect_model_statistics: If ``True``, model statistics are collected before solving.
         context.solver.auto_publish.kpis_output_field_name: Name of field for KPI names in KPI output
             table. Defaults to 'Name'
         context.solver.auto_publish.kpis_output_field_value: Name of field for KPI values for KPI output
