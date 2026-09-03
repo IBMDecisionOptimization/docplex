@@ -85,29 +85,32 @@ class CplexLocalSolveEnv(SolveEnv):
         # It is now modified so that notify start is always performed,
         # then we update solve details only if they need to be published
         # [[[
-        self_stats = mdl.statistics
-        # implementation for https://github.ibm.com/IBMDecisionOptimization/dd-planning/issues/2491
-        problem_type = mdl._get_cplex_problem_type()
-        kpis = make_new_kpis_dict(allkpis=mdl._allkpis[:],
-                                      sense=mdl._objective_sense.verb,
-                                      model_type=problem_type,
-                                      int_vars=self_stats.number_of_integer_variables,
-                                      continuous_vars=self_stats.number_of_continuous_variables,
-                                      semicontinuous_vars = self_stats._number_of_semicontinuous_variables,
-                                      semiinteger_vars = self_stats._number_of_semiinteger_variables,
-                                      linear_constraints=self_stats.number_of_linear_constraints,
-                                      bin_vars=self_stats.number_of_binary_variables,
-                                      quadratic_constraints=self_stats.number_of_quadratic_constraints,
-                                      total_constraints=self_stats.number_of_constraints,
-                                      total_variables=self_stats.number_of_variables)
-        if the_env.is_wmlworker:
-            from docplex_wml.worker.worker_utils import make_cplex_new_kpis_dict
-            new_kpis = make_cplex_new_kpis_dict(mdl)
-            kpis.update(new_kpis)
+        if context.solver.collect_model_statistics:
+            self_stats = mdl.statistics
+            # implementation for https://github.ibm.com/IBMDecisionOptimization/dd-planning/issues/2491
+            problem_type = mdl._get_cplex_problem_type()
+            kpis = make_new_kpis_dict(allkpis=mdl._allkpis[:],
+                                        sense=mdl._objective_sense.verb,
+                                        model_type=problem_type,
+                                        int_vars=self_stats.number_of_integer_variables,
+                                        continuous_vars=self_stats.number_of_continuous_variables,
+                                        semicontinuous_vars = self_stats._number_of_semicontinuous_variables,
+                                        semiinteger_vars = self_stats._number_of_semiinteger_variables,
+                                        linear_constraints=self_stats.number_of_linear_constraints,
+                                        bin_vars=self_stats.number_of_binary_variables,
+                                        quadratic_constraints=self_stats.number_of_quadratic_constraints,
+                                        total_constraints=self_stats.number_of_constraints,
+                                        total_variables=self_stats.number_of_variables)
+            if the_env.is_wmlworker:
+                from docplex_wml.worker.worker_utils import make_cplex_new_kpis_dict
+                new_kpis = make_cplex_new_kpis_dict(mdl)
+                kpis.update(new_kpis)
 
-        the_env.notify_start_solve(kpis)
-        if auto_publish_details:
-            the_env.update_solve_details(kpis, transaction=self._transaction)
+            the_env.notify_start_solve(kpis)
+            if auto_publish_details:
+                the_env.update_solve_details(kpis, transaction=self._transaction)
+        else:
+            the_env.notify_start_solve({})
 
         # ---
         #  parameters override if necessary...
